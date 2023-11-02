@@ -13,7 +13,7 @@ mdl = 'mdl_closed_loop_mpc';
 load_system([mdl '.slx'])
 
 % Friction coefficient
-mu = 0.9;
+mu = 0.393;
 set_param([mdl '/true_friction_coeff'],'Value', num2str(mu) )
 
 % Safe controller or nominal controller
@@ -21,7 +21,7 @@ set_param([mdl '/true_friction_coeff'],'Value', num2str(mu) )
 %NOMINAL_CTRL = '0';
 %set_param([mdl '/control_safe_or_nom'],'sw', NOMINAL_CTRL)
 
-set_param([mdl '/SafeProbabilityMC'],'snum','50')
+set_param([mdl '/SafeProbabilityMC'],'snum','100')
 
 % Online or fixed estimation
 ONLINE_ESTIMATION = '1';
