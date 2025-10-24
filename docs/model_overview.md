@@ -53,5 +53,5 @@ The model is composed of four main subsystems, corresponding to the labeled bloc
 - **All MATLAB function implementations are located under `mfun_*`** (compiled MEX where applicable) and `fun_*` for symbolic/constraint logic.
 - Main entry points:
   - `main_single_run.m` — quick single scenario run and sanity check.
-  - `main_parallel_runs.m` — parameter/MU sweeps and data collection (Monte Carlo).
+  - `main_parallel_runs.m` — parameter/MU sweeps and data collection.
 
