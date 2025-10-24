@@ -9,12 +9,16 @@ The framework includes:
 
 The performance of these controllers is compared in terms of **computation time**, **safety probability**, and **vehicle trajectories**.
 
-- **Computational time vs horizon**  
 - **Safety probability vs horizon**  
 <p align="center">
   <img src="codes/data_mpc/fig_horizon_vs_safeprob.png" alt="Safety probability vs horizon" width="400"/>
+</p>
+
+- **Computational time vs horizon**  
+<p align="center">
   <img src="codes/data_mpc/fig_horizon_vs_time.png" alt="Computational time vs horizon" width="400"/>
 </p>
+
 
 - **Vehicle trajectories for H=10 and H=20**  
 <p align="center">
