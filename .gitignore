@@ -3,6 +3,7 @@
 *.slxc
 *.r2024a
 *.mexw64
+*.autosave
 archive
 resources
 slprj

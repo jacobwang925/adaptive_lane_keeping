@@ -20,10 +20,10 @@ set_param([mdl '/estimate_fixed'], 'Value',  '[0.30, 0.01]')
 set_param([mdl '/prior'],'InitialCondition', '[0.30, 0.01]')
 
 % Num MC sims for safety probability calculation
-set_param([mdl '/SafeProbabilityMC'],'snum','1') % 100 samples
+set_param([mdl '/SafeProbabilityMC'],'snum','150') % change to 100 for reproduction
 
 % Visulization
-set_param([mdl '/visualization'],'Commented','off') 
+set_param([mdl '/visualization'],'Commented','off') % 'on' to disable
 
 % Termination condition
 TERM_DIST = '300'; 
@@ -56,8 +56,9 @@ nlobj.Model.NumberOfParameters = 2;
 nlobj.Weights.OutputVariables = [0.03 1 1]; % [Vx,e,psi] 
 nlobj.Weights.ManipulatedVariablesRate = [1 1];
 %%% constraint
-%nlobj.Optimization.CustomIneqConFcn = "fun_inequality"; % PSC (Proposed)
-nlobj.Optimization.CustomIneqConFcn = "fun_inequality_CDBF"; % CDBF
+nlobj.Optimization.CustomIneqConFcn = [];
+nlobj.Optimization.CustomIneqConFcn = "fun_inequality"; % PSC (Proposed)
+%nlobj.Optimization.CustomIneqConFcn = "fun_inequality_CDBF"; % CDBF
 %nlobj.Optimization.CustomIneqConFcn = @myIneqConFunction; % defined below
 
 % validation for codegeneration

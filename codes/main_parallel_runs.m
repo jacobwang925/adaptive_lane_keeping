@@ -63,6 +63,7 @@ nlobj.Weights.ManipulatedVariablesRate = [1 1];
 % validation for codegeneration
 u0 = [0 0];
 ref0 = [40*1000/3600 0 0];
+mu = 0.9;
 probs = [1, 0, 1, 1, 0]; % [P, LfP, LgP, BP] for testing
 validateFcns(nlobj,init,u0,{},{mu,probs},ref0);
 nloptions = nlmpcmoveopt;
@@ -91,7 +92,7 @@ save_system(mdl,[],'OverwriteIfChangedOnDisk',true)
 
 
 %% Simulink objects for parllel computation
-num_sims = 1;
+num_sims = 2;
 MU  = NaN(num_sims,1); 
 for i = 1:num_sims
     in(i) = Simulink.SimulationInput(mdl);
