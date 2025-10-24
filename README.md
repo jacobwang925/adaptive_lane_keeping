@@ -48,6 +48,9 @@ The performance of these controllers is compared in terms of **computation time*
 └─ docs/                          ← Figures, notes
 ```
 
+For more details on Simulink implementation, see [docs/model_overview.md](docs/model_overview.md).
+
+
 ---
 
 ## 2. Requirements
