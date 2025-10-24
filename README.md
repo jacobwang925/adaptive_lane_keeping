@@ -9,6 +9,19 @@ The framework includes:
 
 The performance of these controllers is compared in terms of **computation time**, **safety probability**, and **vehicle trajectories**.
 
+- **Computational time vs horizon**  
+- **Safety probability vs horizon**  
+<p align="center">
+  <img src="codes/data_mpc/fig_horizon_vs_safeprob.png" alt="Safety probability vs horizon" width="400"/>
+  <img src="codes/data_mpc/fig_horizon_vs_time.png" alt="Computational time vs horizon" width="400"/>
+</p>
+
+- **Vehicle trajectories for H=10 and H=20**  
+<p align="center">
+  <img src="codes/data_mpc/fig_trajectory_H10.png" alt="Vehicle trajectories H=10" width="300"/>
+  <img src="codes/data_mpc/fig_trajectory_H20.png" alt="Vehicle trajectories H=20" width="300"/>
+</p>
+
 
 ---
 
@@ -105,19 +118,3 @@ data_mpc/data_CDBF_multi_icy_H10.mat
 data_mpc/data_APSC_multi_icy_H10.mat
 ```
 
----
-
-## 6. Example results
-
-- **Computational time vs horizon**  
-- **Safety probability vs horizon**  
-<p align="center">
-  <img src="codes/data_mpc/fig_horizon_vs_safeprob.png" alt="Safety probability vs horizon" width="400"/>
-  <img src="codes/data_mpc/fig_horizon_vs_time.png" alt="Computational time vs horizon" width="400"/>
-</p>
-
-- **Vehicle trajectories for H=10 and H=20**  
-<p align="center">
-  <img src="codes/data_mpc/fig_trajectory_H10.png" alt="Vehicle trajectories H=10" width="300"/>
-  <img src="codes/data_mpc/fig_trajectory_H20.png" alt="Vehicle trajectories H=20" width="300"/>
-</p>
