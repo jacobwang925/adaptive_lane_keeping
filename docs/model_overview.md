@@ -10,6 +10,16 @@ The model is composed of four main subsystems, corresponding to the labeled bloc
 
 ---
 
+## Notes on Code Organization
+
+- The Simulink blocks call external MATLAB functions for clarity and performance.
+- **All MATLAB function implementations are located under `mfun_*`** (compiled MEX where applicable) and `fun_*` for symbolic/constraint logic.
+- Main entry points:
+  - `main_single_run.m` — quick single scenario run and sanity check.
+  - `main_parallel_runs.m` — parameter/MU sweeps and data collection.
+
+---
+
 ## 1) Parameter Estimation
 
 - Online estimation of the road friction coefficient $\mu$.
@@ -44,14 +54,4 @@ The model is composed of four main subsystems, corresponding to the labeled bloc
 - Collects and visualizes key variables: lateral error, yaw, forces, slip ratio/angle, etc.
 - Animated visualization of the trajectory is implemented in **`msfun_visualize_motion.m`**.
 - Termination conditions (distance and lateral error) are monitored to stop the simulation and log the outcome.
-
----
-
-## Notes on Code Organization
-
-- The Simulink blocks call external MATLAB functions for clarity and performance.
-- **All MATLAB function implementations are located under `mfun_*`** (compiled MEX where applicable) and `fun_*` for symbolic/constraint logic.
-- Main entry points:
-  - `main_single_run.m` — quick single scenario run and sanity check.
-  - `main_parallel_runs.m` — parameter/MU sweeps and data collection.
 
