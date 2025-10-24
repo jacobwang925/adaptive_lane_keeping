@@ -82,7 +82,7 @@ run('main_single_run.m')
     ```matlab
     set_param([mdl '/SafeProbabilityMC'],'snum','1') % change to 100 for reproduction
     ```
-  - To properly evaluate the Proposed method(PSC) and obtain meaningful safety probability results, change this to `100`.
+  - To properly evaluate the Proposed method (PSC) and obtain meaningful safety probability results, increase this setting to `100` or more. When the friction coefficient is at its lowest value (`mu = 0.2`), using around 200 samples is recommended.
 
 
 ### Step 2: Data collection (parallel runs)
@@ -94,13 +94,12 @@ run('main_parallel_runs.m')
 
 - Launches parallel simulations with random friction coefficients.  
 - Saves results (state, trajectory, safety probability, elapsed time) into `.mat` files under `data_mpc/`.  
-- Use this script to reproduce the performance plots  
-  - By default:
+- By default the number of trial runs and the number of parallel pools are
     ```matlab
     num_sims = 2;     % quick check
     num_pools = 2;    % number of workers in parallel pool
     ```
- - To reproduce the figures in the paper:
+- To reproduce the performance plots
     - Set `num_sims = 30`  
     - Adjust `num_pools` depending on your computational environment.
 
@@ -124,18 +123,14 @@ nlobj.Optimization.CustomIneqConFcn = [];
 ### Note on code generation
 
 - The scripts include an option to generate a MEX function for faster MPC evaluation:
-
-```matlab
-code_gen = true;   % build controller as MEX
-```
-
-- For quick tests you can set:
-```matlab
-code_gen = false;  % skip build, use MATLAB function directly
-```
-
-- **Important:** If you change the safety constraints (`fun_inequality`, `fun_inequality_CDBF`, etc.),  
-  you must re-build the controller (`code_gen = true`) so the compiled MEX matches the new constraints.
+   ```matlab
+   code_gen = true;   % build controller as MEX
+   ```
+- If a MEX has already been built and no changes to the constraints are needed, you can set:
+   ```matlab
+   code_gen = false;  % reuse previously built MEX (no rebuild)
+   ```
+- **Important:** If you change the safety constraints (`fun_inequality`, `fun_inequality_CDBF`, etc.), you must re-build the controller (`code_gen = true`) so the compiled MEX matches the new constraints.
 
 
 ---
