@@ -1,8 +1,11 @@
 *~
 *.asv
 *.slxc
+*.r2024a
+*.mexw64
 archive
 resources
 slprj
+codes/codegen
 paper
 memo*
