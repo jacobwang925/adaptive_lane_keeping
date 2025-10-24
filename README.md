@@ -74,7 +74,16 @@ run('main_single_run.m')
 
 - Runs one closed-loop simulation with fixed settings.  
 - Useful to check if the model, controller, and estimator are working.  
-- Visualization can be turned on/off inside the script.
+- Visualization can be turned on/off inside the script:
+    ```matlab
+    set_param([mdl '/visualization'],'Commented','off') % 'on' to disable
+    ```   
+- For quick checks, the number of Monte Carlo samples for safety probability is initially set to `1`:
+    ```matlab
+    set_param([mdl '/SafeProbabilityMC'],'snum','1') % change to 100 for reproduction
+    ```
+  - To properly evaluate the Proposed method(PSC) and obtain meaningful safety probability results, change this to `100`.
+
 
 ### Step 2: Data collection (parallel runs)
 
@@ -86,6 +95,14 @@ run('main_parallel_runs.m')
 - Launches parallel simulations with random friction coefficients.  
 - Saves results (state, trajectory, safety probability, elapsed time) into `.mat` files under `data_mpc/`.  
 - Use this script to reproduce the performance plots  
+  - By default:
+    ```matlab
+    num_sims = 2;     % quick check
+    num_pools = 2;    % number of workers in parallel pool
+    ```
+ - To reproduce the figures in the paper:
+    - Set `num_sims = 30`  
+    - Adjust `num_pools` depending on your computational environment.
 
 ---
 
@@ -103,6 +120,23 @@ nlobj.Optimization.CustomIneqConFcn = "fun_inequality_CDBF";
 % Adaptive MPC (no safety constraints)
 nlobj.Optimization.CustomIneqConFcn = [];
 ```
+
+### Note on code generation
+
+- The scripts include an option to generate a MEX function for faster MPC evaluation:
+
+```matlab
+code_gen = true;   % build controller as MEX
+```
+
+- For quick tests you can set:
+```matlab
+code_gen = false;  % skip build, use MATLAB function directly
+```
+
+- **Important:** If you change the safety constraints (`fun_inequality`, `fun_inequality_CDBF`, etc.),  
+  you must re-build the controller (`code_gen = true`) so the compiled MEX matches the new constraints.
+
 
 ---
 
