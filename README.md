@@ -113,5 +113,12 @@ data_mpc/data_APSC_multi_icy_H10.mat
 - **Safety probability vs horizon**  
 - **Vehicle trajectories for H=10 and H=20**  
 
-(see `docs/figs/fig5_horizon_tradeoff.png` and `docs/figs/fig6_trajectories.png`)
+<p align="center">
+  <img src="codes/data_mpc/fig_horizon_vs_safeprob.png" alt="Safety probability vs horizon" width="400"/>
+  <img src="codes/data_mpc/fig_horizon_vs_time.png" alt="Computational time vs horizon" width="400"/>
+</p>
 
+<p align="center">
+  <img src="codes/data_mpc/fig_trajectory_H10.png" alt="Vehicle trajectories H=10" width="450"/>
+  <img src="codes/data_mpc/fig_trajectory_H20.png" alt="Vehicle trajectories H=20" width="450"/>
+</p>
