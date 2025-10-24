@@ -82,7 +82,7 @@ run('main_single_run.m')
     ```matlab
     set_param([mdl '/SafeProbabilityMC'],'snum','1') % change to 100 for reproduction
     ```
-  - To properly evaluate the Proposed method (PSC) and obtain meaningful safety probability results, increase this setting to `100` or more. When the friction coefficient is at its lowest value (`mu = 0.2`), using around `200 ` samples is recommended.
+  - To properly evaluate the Proposed method (PSC) and obtain meaningful safety probability results, increase this setting to `100` or more. When the friction coefficient is at its lowest value (`mu = 0.2`), using around `200` samples is recommended.
 
 
 ### Step 2: Data collection (parallel runs)
