@@ -132,10 +132,30 @@ nlobj.Optimization.CustomIneqConFcn = [];
    ```
 - **Important:** If you change the safety constraints (`fun_inequality`, `fun_inequality_CDBF`, etc.), you must re-build the controller (`code_gen = true`) so the compiled MEX matches the new constraints.
 
+---
+
+## 5. Estimation settings (friction coefficient)
+
+In `main_single_run.m` and `main_parallel_runs.m`, the estimator can be configured at the beginning of the script:
+
+```matlab
+ONLINE_ESTIMATION = '1';
+FIXED_ESTIMATION  = '0';
+set_param([mdl '/estimation_sw'],'sw', ONLINE_ESTIMATION)   % '1' for online estimation, '0' for fixed
+set_param([mdl '/estimate_fixed'], 'Value',  '[0.30, 0.01]') % Fixed estimate [mean, variance]
+set_param([mdl '/prior'],'InitialCondition', '[0.30, 0.01]') % Prior of online estimation [mean, variance]
+set_param([mdl '/mes_var'], 'Value', '0.1')                  % Measurement noise variance
+```
+
+- By default, online estimation is enabled.
+- To test with a fixed friction value, set `FIXED_ESTIMATION` instead.
+- The prior mean/variance can be adjusted depending on the scenario.
+- `mes_var` controls the assumed measurement noise variance used in the estimator.
+
 
 ---
 
-## 5. Outputs
+## 6. Outputs
 
 Each run produces:
 

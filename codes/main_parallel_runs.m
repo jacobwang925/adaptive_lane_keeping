@@ -18,6 +18,7 @@ FIXED_ESTIMATION  = '0';
 set_param([mdl '/estimation_sw'],'sw', ONLINE_ESTIMATION) % Online Estimation
 set_param([mdl '/estimate_fixed'], 'Value',  '[0.30, 0.01]')
 set_param([mdl '/prior'],'InitialCondition', '[0.30, 0.01]')
+set_param([mdl '/mes_var'], 'Value', '0.1')
 
 % Num MC sims for safety probability calculation
 set_param([mdl '/SafeProbabilityMC'],'snum','100') % 100 samples
