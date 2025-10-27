@@ -1,6 +1,5 @@
+function res = run_closed_loop_single(prior_ic, mes_var, e_max)
 % Main program for closed-loop simulation
-%
-clear
 
 %%%  Path to model %%%%%%%%%%%
 addpath impl_controller
@@ -16,9 +15,9 @@ load_system(mdl)
 ONLINE_ESTIMATION = '1';
 FIXED_ESTIMATION  = '0';
 set_param([mdl '/estimation_sw'],'sw', ONLINE_ESTIMATION)
-set_param([mdl '/estimate_fixed'], 'Value',  '[0.30, 0.01]')
-set_param([mdl '/prior'],'InitialCondition', '[0.30, 0.01]')
-set_param([mdl '/mes_var'], 'Value', '0.1')
+set_param([mdl '/estimate_fixed'], 'Value',  '[0.30, 0.01]')                 % keep as given
+set_param([mdl '/prior'],'InitialCondition', mat2str(prior_ic))               % uses input prior_ic
+set_param([mdl '/mes_var'], 'Value', num2str(mes_var))                        % uses input mes_var
 
 % Num MC sims for safety probability calculation
 set_param([mdl '/SafeProbabilityMC'],'snum','100') % change to 100 for reproduction
@@ -27,10 +26,10 @@ set_param([mdl '/SafeProbabilityMC'],'snum','100') % change to 100 for reproduct
 set_param([mdl '/visualization'],'Commented','off') % 'on' to disable
 
 % Termination condition
-TERM_DIST = '300'; 
+TERM_DIST = '150'; 
 set_param([mdl '/termination_dist'], 'Value', TERM_DIST)
 
-TERM_LAT_ERROR  = '300';
+TERM_LAT_ERROR  = '100';
 set_param([mdl '/termination_lat'], 'Value', TERM_LAT_ERROR)
 
 % Initial state
@@ -57,8 +56,8 @@ nlobj.Model.NumberOfParameters = 2;
 nlobj.Weights.OutputVariables = [0.03 1 1]; % [Vx,e,psi] 
 nlobj.Weights.ManipulatedVariablesRate = [1 1];
 %%% constraint
-nlobj.Optimization.CustomIneqConFcn = [];
-%nlobj.Optimization.CustomIneqConFcn = "fun_inequality"; % PSC (Proposed)
+%nlobj.Optimization.CustomIneqConFcn = [];
+nlobj.Optimization.CustomIneqConFcn = "fun_inequality"; % PSC (Proposed)
 %nlobj.Optimization.CustomIneqConFcn = "fun_inequality_CDBF"; % CDBF
 %nlobj.Optimization.CustomIneqConFcn = @myIneqConFunction; % defined below
 
@@ -82,46 +81,44 @@ if code_gen
     disp('--- building MPC controller ----')
     func = 'nlmpcmoveCodeGeneration';
     funcOutput = 'fun_mpc_controller';
-    Cfg = coder.config('mex');
+    cfg = coder.config('mex');                       % fixed var name
     %Cfg.DynamicMemoryAllocation = 'off'; %% Deprecated in Matlab2025a
     cfg.EnableDynamicMemoryAllocation = true;     %% After Matlab2025a
     cfg.DynamicMemoryAllocationThreshold = 65536; %% After Matlab2025a
-    codegen('-config',Cfg,func,'-o',funcOutput,'-args',...
+    codegen('-config',cfg,func,'-o',funcOutput,'-args',...
         {coder.Constant(coreData), xk', mv, onlineData});
 end
 
+assignin('base','coreData',coreData);
+assignin('base','onlineData',onlineData);
 
 %% Closed-loop simulation
 disp('--- start simulation ----')
 
 % Friction coefficient
-mu = 0.2;
+mu = 0.3;
 set_param([mdl '/true_friction_coeff'],'Value', num2str(mu) )
 
-res = sim([mdl '.slx']);
+res_sim = sim([mdl '.slx']);
 
-prob  = renamevars( res.SafeProb.extractTimetable, 'Data', 'prob');
-dist  = renamevars( res.ProbDist.extractTimetable, 'Data', 'dist');
-state = renamevars( res.State.extractTimetable, 'Data', 'state');
-input = renamevars( res.Input.extractTimetable, 'Data', 'input');
-force = renamevars( res.TireForce.extractTimetable, 'Data', 'force');
-slipA = renamevars( res.slipA.extractTimetable, 'Data', 'slipA');
-slipR = renamevars( res.slipR.extractTimetable, 'Data', 'slipR');
-traj  = renamevars( res.Trajectory.extractTimetable, 'Data', 'traj');
-LfP   = renamevars( res.LfP.extractTimetable, 'Data', 'LfP');
-LgP   = renamevars( res.LgP.extractTimetable, 'Data', 'LgP');
-BP    = renamevars( res.BP.extractTimetable,  'Data', 'BP');
+prob  = renamevars( res_sim.SafeProb.extractTimetable, 'Data', 'prob');
+dist  = renamevars( res_sim.ProbDist.extractTimetable, 'Data', 'dist');
+state = renamevars( res_sim.State.extractTimetable, 'Data', 'state');
+input = renamevars( res_sim.Input.extractTimetable, 'Data', 'input');
+force = renamevars( res_sim.TireForce.extractTimetable, 'Data', 'force');
+slipA = renamevars( res_sim.slipA.extractTimetable, 'Data', 'slipA');
+slipR = renamevars( res_sim.slipR.extractTimetable, 'Data', 'slipR');
+traj  = renamevars( res_sim.Trajectory.extractTimetable, 'Data', 'traj');
+LfP   = renamevars( res_sim.LfP.extractTimetable, 'Data', 'LfP');
+LgP   = renamevars( res_sim.LgP.extractTimetable, 'Data', 'LgP');
+BP    = renamevars( res_sim.BP.extractTimetable,  'Data', 'BP');
 
 %save 'data/data_Nominal_mu09' prob dist state input force slipA slipR traj LfP LgP BP
 
 disp('--- completed ----')
 
-function cineq = myIneqConFunction(X,U,e,data,mu,probs)
-    u = U(1,:)';
-    epsilon = 0.1;  alpha   = 1.0; 
-    p = probs(1); LfP = probs(2); LgP = probs(3:4); BP = probs(5);
-    cineq = -LgP * u - LfP - BP - alpha * ( p - (1-epsilon) );
-    %disp([cineq, e])
-    %cineq = -1;
+% package outputs
+res = struct('prob',prob,'dist',dist,'state',state,'input',input, ...
+             'force',force,'slipA',slipA,'slipR',slipR,'traj',traj, ...
+             'LfP',LfP,'LgP',LgP,'BP',BP);
 end
-

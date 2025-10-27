@@ -1,15 +1,15 @@
-function phi = fun_safety_condition(x, xi)
+function phi = fun_safety_condition(x, xi, emax)
 
-    phi = lane_keeping(x, xi);
+    phi = lane_keeping(x, xi, emax);
    %phi = tire_forces(x, xi);
 
 end
 
 % Lane Keeping
-function phi = lane_keeping(x, xi)
+function phi = lane_keeping(x, xi, emax)
 
     e    = x(11); % lateral error
-    emax = 5; 
+    % emax = 5; 
     phi = 1 - (e/emax)^2;
 
 end

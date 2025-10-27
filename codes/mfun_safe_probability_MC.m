@@ -1,4 +1,4 @@
-function [p, LfP, LgP, BP] = mfun_safe_probability_MC(x_ini, Dis_k, Dis_pre, dt, snum, horizon)
+function [p, LfP, LgP, BP] = mfun_safe_probability_MC(x_ini, Dis_k, Dis_pre, dt, snum, horizon, emax)
 % Implementation of MATLAB Function for calculating 
 % safe probability by Monte Carlo simulation 
 %
@@ -9,6 +9,7 @@ function [p, LfP, LgP, BP] = mfun_safe_probability_MC(x_ini, Dis_k, Dis_pre, dt,
     paramMC.dt      = dt;
     paramMC.snum    = snum;
     paramMC.horizon = horizon;
+    paramMC.emax = emax;
     p          = safe_probability(x_ini, paramMC, Dis_k);
     [LfP, LgP] = grad_of_p(x_ini, paramMC, Dis_k); 
     BP         = p - safe_probability(x_ini, paramMC, Dis_pre);
@@ -22,6 +23,7 @@ function p = safe_probability(x_ini, paramMC, paramDis)
     xi_mean  = paramDis(1);
     xi_sigma = sqrt(paramDis(2));
     samples  = ones(1, paramMC.snum);
+    emax = paramMC.emax;
    
     parfor i = 1:paramMC.snum
 
@@ -37,7 +39,7 @@ function p = safe_probability(x_ini, paramMC, paramDis)
             x = transpose( y(end,:) );
 
             % unsafe if barrier function go below 0
-            if fun_safety_condition(x,xi) < 0 
+            if fun_safety_condition(x,xi,emax) < 0 
                 samples(i)   = 0;
                 break
             end
