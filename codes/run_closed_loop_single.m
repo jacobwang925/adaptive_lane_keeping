@@ -1,4 +1,4 @@
-function res = run_closed_loop_single(prior_ic, mes_var, e_max)
+function res = run_closed_loop_single(prior_ic, mes_var, emax)
 % Main program for closed-loop simulation
 
 %%%  Path to model %%%%%%%%%%%
@@ -18,6 +18,10 @@ set_param([mdl '/estimation_sw'],'sw', ONLINE_ESTIMATION)
 set_param([mdl '/estimate_fixed'], 'Value',  '[0.30, 0.01]')                 % keep as given
 set_param([mdl '/prior'],'InitialCondition', mat2str(prior_ic))               % uses input prior_ic
 set_param([mdl '/mes_var'], 'Value', num2str(mes_var))                        % uses input mes_var
+
+
+% Lane error tolerance
+set_param([mdl '/SafeProbabilityMC'],'emax',num2str(emax)) % default is 5
 
 % Num MC sims for safety probability calculation
 set_param([mdl '/SafeProbabilityMC'],'snum','100') % change to 100 for reproduction

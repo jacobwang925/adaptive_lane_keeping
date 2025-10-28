@@ -6,12 +6,12 @@
 clear; clc;
 
 % Define parameters
-prior_ic = [0.80 0.01];   % initial prior for estimator
-mes_var  = 0.80;          % measurement variance
-e_max    = 5.0;           % maximum lateral error threshold
+prior_ic = [0.30 0.01];   % initial prior for estimator
+mes_var  = 0.10;          % measurement variance
+emax    = 15.0;           % maximum lateral error threshold
 
 disp('=== Running closed-loop simulation ===')
-res = run_closed_loop_single(prior_ic, mes_var, e_max);
+res = run_closed_loop_single(prior_ic, mes_var, emax);
 
 disp('=== Simulation complete ===')
 
