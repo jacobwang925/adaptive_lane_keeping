@@ -1,6 +1,6 @@
+function res = run_closed_loop_parallel(prior_ic, mes_var, emax, saveData)
+
 % Main program for closed-loop simulation (multiple parallel runs)
-%
-clear
 
 %%%  Path to model %%%%%%%%%%%
 addpath impl_controller
@@ -17,8 +17,11 @@ ONLINE_ESTIMATION = '1';
 FIXED_ESTIMATION  = '0';
 set_param([mdl '/estimation_sw'],'sw', ONLINE_ESTIMATION) % Online Estimation
 set_param([mdl '/estimate_fixed'], 'Value',  '[0.30, 0.01]')
-set_param([mdl '/prior'],'InitialCondition', '[0.30, 0.01]')
-set_param([mdl '/mes_var'], 'Value', '0.1')
+set_param([mdl '/prior'],'InitialCondition', mat2str(prior_ic))               % uses input prior_ic
+set_param([mdl '/mes_var'], 'Value', num2str(mes_var))                        % uses input mes_var
+
+% Lane error tolerance
+set_param([mdl '/SafeProbabilityMC'],'emax',num2str(emax)) % default is 5
 
 % Num MC sims for safety probability calculation
 set_param([mdl '/SafeProbabilityMC'],'snum','100') % 100 samples
@@ -81,29 +84,32 @@ if code_gen
     disp('--- building MPC controller ----')
     func = 'nlmpcmoveCodeGeneration';
     funcOutput = 'fun_mpc_controller';
-    Cfg = coder.config('mex');
+    cfg = coder.config('mex');
     %Cfg.DynamicMemoryAllocation = 'off'; %% Deprecated in Matlab2025a
     cfg.EnableDynamicMemoryAllocation = true;     %% After Matlab2025a
     cfg.DynamicMemoryAllocationThreshold = 65536; %% After Matlab2025a
-    codegen('-config',Cfg,func,'-o',funcOutput,'-args',...
+    codegen('-config',cfg,func,'-o',funcOutput,'-args',...
         {coder.Constant(coreData), xk', mv, onlineData});
 end
+
+assignin('base','coreData',coreData);
+assignin('base','onlineData',onlineData);
 
 save_system(mdl,[],'OverwriteIfChangedOnDisk',true)
 
 
 %% Simulink objects for parllel computation
-num_sims = 2;
+num_sims = 20;
 MU  = NaN(num_sims,1); 
 for i = 1:num_sims
     in(i) = Simulink.SimulationInput(mdl);
 
-    MU(i) = 0.2 + rand*0.2;
+    MU(i) = 0.3 + rand*0.1;
     in(i) = setBlockParameter(in(i), [mdl '/true_friction_coeff'], Value=num2str(MU(i)) );
 end
 
 %% Pallarell simulations
-num_pools = 2;
+num_pools = 20;
 poolobj = gcp("nocreate"); % If no pool, do not create new one.
 if isempty(poolobj)
     parpool(num_pools)
@@ -131,8 +137,41 @@ for i = 1:num_sims
     STATE( i, 1:len, :) = state.Data;
     ETIME( i, 1:len) = etime.Data;
 end
-% save 'data_mpc/data_AMPC_multi_icy_H10' MU PROB SPEED TRAJ STATE ETIME
-% save 'data_mpc/data_CDBF_multi_icy_H10' MU PROB SPEED TRAJ STATE ETIME
-% save 'data_mpc/data_APSC_multi_icy_H10' MU PROB SPEED TRAJ STATE ETIME
+
+% if saveData
+%     save 'data_mpc/data_AMPC_multi_icy_H10' MU PROB SPEED TRAJ STATE ETIME
+%     save 'data_mpc/data_CDBF_multi_icy_H10' MU PROB SPEED TRAJ STATE ETIME
+%     save 'data_mpc/data_APSC_multi_icy_H10' MU PROB SPEED TRAJ STATE ETIME
+% end
+
+if saveData
+    % Format parameters for filename (replace '.' with 'p' to avoid issues)
+    % Assuming prior_ic is a 1x2 vector
+    p1_str = strrep(num2str(prior_ic(1)), '.', 'p');
+    p2_str = strrep(num2str(prior_ic(2)), '.', 'p');
+    mes_var_str = strrep(num2str(mes_var), '.', 'p');
+    emax_str = strrep(num2str(emax), '.', 'p');
+    
+    % Create the dynamic parameter string
+    param_str = sprintf('_prior_%s_%s_mesvar_%s_emax_%s', p1_str, p2_str, mes_var_str, emax_str);
+    
+    % --- Apply new filename to all three save commands from original code ---
+    
+    % 1. AMPC filename
+    file_ampc = ['data_mpc/data_AMPC_multi_icy_H10', param_str, '.mat'];
+    save(file_ampc, 'MU', 'PROB', 'SPEED', 'TRAJ', 'STATE', 'ETIME');
+    fprintf('Data is saved at %s\n', file_ampc);
+
+    % 2. CDBF filename
+    file_cdbf = ['data_mpc/data_CDBF_multi_icy_H10', param_str, '.mat'];
+    save(file_cdbf, 'MU', 'PROB', 'SPEED', 'TRAJ', 'STATE', 'ETIME');
+    fprintf('Data is saved at %s\n', file_cdbf);
+
+    % 3. APSC filename
+    file_apsc = ['data_mpc/data_APSC_multi_icy_H10', param_str, '.mat'];
+    save(file_apsc, 'MU', 'PROB', 'SPEED', 'TRAJ', 'STATE', 'ETIME');
+    fprintf('Data is saved at %s\n', file_apsc);
+end
+
 
 save_system(mdl,[],'OverwriteIfChangedOnDisk',true)
