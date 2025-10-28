@@ -4,9 +4,16 @@ clear
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % load data
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-AMPC_icy = load("data_AMPC_multi_icy_H05.mat");
-CDBF_icy = load("data_CDBF_multi_icy_H05.mat");
-APSC_icy = load("data_APSC_multi_icy_H05.mat");
+% AMPC_icy = load("data_AMPC_multi_icy_H05.mat");
+% CDBF_icy = load("data_CDBF_multi_icy_H05.mat");
+% APSC_icy = load("data_APSC_multi_icy_H05.mat");
+% AMPC_icy = load("data_mpc/data_AMPC_multi_icy_H10_prior_0p3_0p01_mesvar_0p1_emax_15.mat");
+% CDBF_icy = load("data_mpc/data_CDBF_multi_icy_H10_prior_0p3_0p01_mesvar_0p1_emax_15.mat");
+% APSC_icy = load("data_mpc/data_APSC_multi_icy_H10_prior_0p3_0p01_mesvar_0p1_emax_15.mat");
+AMPC_icy = load("data_mpc/data_AMPC_multi_icy_H10_prior_0p3_0p05_mesvar_0p05_emax_5.mat");
+CDBF_icy = load("data_mpc/data_CDBF_multi_icy_H10_prior_0p3_0p05_mesvar_0p05_emax_5.mat");
+APSC_icy = load("data_mpc/data_APSC_multi_icy_H10_prior_0p3_0p05_mesvar_0p05_emax_5.mat");
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % plot trajectories
@@ -46,14 +53,14 @@ for i = 1:num
     plot(traj_x, traj_y, Color='#D95319', HandleVisibility='off')
 
     % Adaptive MPC + CDBF
-    traj_x = rmmissing( CDBF_icy.TRAJ(i, 1:end-1, 1) );
-    traj_y = rmmissing( CDBF_icy.TRAJ(i, 1:end-1, 2) );
-    plot(traj_x, traj_y, Color='#EDB120', HandleVisibility='off')
+    % traj_x = rmmissing( CDBF_icy.TRAJ(i, 1:end-1, 1) );
+    % traj_y = rmmissing( CDBF_icy.TRAJ(i, 1:end-1, 2) );
+    % plot(traj_x, traj_y, Color='#EDB120', HandleVisibility='off')
 
     % Adaptive PSC (Proposed)
-    traj_x = rmmissing( APSC_icy.TRAJ(i, 1:end-1, 1) );
-    traj_y = rmmissing( APSC_icy.TRAJ(i, 1:end-1, 2) );
-    plot(traj_x, traj_y, Color='#0072BD', HandleVisibility='off')
+    % traj_x = rmmissing( APSC_icy.TRAJ(i, 1:end-1, 1) );
+    % traj_y = rmmissing( APSC_icy.TRAJ(i, 1:end-1, 2) );
+    % plot(traj_x, traj_y, Color='#0072BD', HandleVisibility='off')
 end
 
 t = 0:0.1:1;
