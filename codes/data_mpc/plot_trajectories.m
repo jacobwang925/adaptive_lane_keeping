@@ -10,9 +10,9 @@ clear
 % AMPC_icy = load("data_mpc/data_AMPC_multi_icy_H10_prior_0p3_0p01_mesvar_0p1_emax_15.mat");
 % CDBF_icy = load("data_mpc/data_CDBF_multi_icy_H10_prior_0p3_0p01_mesvar_0p1_emax_15.mat");
 % APSC_icy = load("data_mpc/data_APSC_multi_icy_H10_prior_0p3_0p01_mesvar_0p1_emax_15.mat");
-AMPC_icy = load("data_mpc/data_AMPC_multi_icy_H10_prior_0p3_0p05_mesvar_0p05_emax_5.mat");
-CDBF_icy = load("data_mpc/data_CDBF_multi_icy_H10_prior_0p3_0p05_mesvar_0p05_emax_5.mat");
-APSC_icy = load("data_mpc/data_APSC_multi_icy_H10_prior_0p3_0p05_mesvar_0p05_emax_5.mat");
+AMPC = load("data_mpc/data_AMPC_multi_icy_H10_prior_0p3_0p05_mesvar_0p05_emax_10.mat");
+CDBF = load("data_mpc/data_CDBF_multi_icy_H10_prior_0p3_0p05_mesvar_0p05_emax_10.mat");
+APSC = load("data_mpc/data_APSC_multi_icy_H10_prior_0p3_0p05_mesvar_0p05_emax_10.mat");
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -30,37 +30,37 @@ num = 10;
 i = 1;
 
 % Adaptive PSC (Proposed)
-traj_x = rmmissing( APSC_icy.TRAJ(i, 1:end-1, 1) );
-traj_y = rmmissing( APSC_icy.TRAJ(i, 1:end-1, 2) );
+traj_x = rmmissing( APSC.TRAJ(i, 1:end-1, 1) );
+traj_y = rmmissing( APSC.TRAJ(i, 1:end-1, 2) );
 plot(traj_x, traj_y, Color='#0072BD', DisplayName='Proposed')
 
 % Adaptive MPC
-traj_x = rmmissing( AMPC_icy.TRAJ(i, :, 1) );
-traj_y = rmmissing( AMPC_icy.TRAJ(i, :, 2) );
+traj_x = rmmissing( AMPC.TRAJ(i, :, 1) );
+traj_y = rmmissing( AMPC.TRAJ(i, :, 2) );
 plot(traj_x, traj_y, Color='#D95319', DisplayName='Adaptive MPC')
 
 % Adaptive MPC + CDBF
-traj_x = rmmissing( CDBF_icy.TRAJ(i, 1:end-1, 1) );
-traj_y = rmmissing( CDBF_icy.TRAJ(i, 1:end-1, 2) );
+traj_x = rmmissing( CDBF.TRAJ(i, 1:end-1, 1) );
+traj_y = rmmissing( CDBF.TRAJ(i, 1:end-1, 2) );
 plot(traj_x, traj_y, Color='#EDB120', DisplayName='CDBF')
 
 
 for i = 1:num
 
     % Adaptive MPC
-    traj_x = rmmissing( AMPC_icy.TRAJ(i, :, 1) );
-    traj_y = rmmissing( AMPC_icy.TRAJ(i, :, 2) );
+    traj_x = rmmissing( AMPC.TRAJ(i, :, 1) );
+    traj_y = rmmissing( AMPC.TRAJ(i, :, 2) );
     plot(traj_x, traj_y, Color='#D95319', HandleVisibility='off')
 
     % Adaptive MPC + CDBF
-    % traj_x = rmmissing( CDBF_icy.TRAJ(i, 1:end-1, 1) );
-    % traj_y = rmmissing( CDBF_icy.TRAJ(i, 1:end-1, 2) );
-    % plot(traj_x, traj_y, Color='#EDB120', HandleVisibility='off')
+    traj_x = rmmissing( CDBF.TRAJ(i, 1:end-1, 1) );
+    traj_y = rmmissing( CDBF.TRAJ(i, 1:end-1, 2) );
+    plot(traj_x, traj_y, Color='#EDB120', HandleVisibility='off')
 
     % Adaptive PSC (Proposed)
-    % traj_x = rmmissing( APSC_icy.TRAJ(i, 1:end-1, 1) );
-    % traj_y = rmmissing( APSC_icy.TRAJ(i, 1:end-1, 2) );
-    % plot(traj_x, traj_y, Color='#0072BD', HandleVisibility='off')
+    traj_x = rmmissing( APSC.TRAJ(i, 1:end-1, 1) );
+    traj_y = rmmissing( APSC.TRAJ(i, 1:end-1, 2) );
+    plot(traj_x, traj_y, Color='#0072BD', HandleVisibility='off')
 end
 
 t = 0:0.1:1;
