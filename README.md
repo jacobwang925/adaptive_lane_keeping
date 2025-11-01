@@ -55,7 +55,7 @@ For more details on Simulink implementation, see [docs/model_overview.md](docs/m
 
 ## 2. Requirements
 
-- MATLAB R2023b or later  
+- MATLAB R2025a — development environment (other versions may or may not be compatible)  
 - Simulink  
 - Model Predictive Control Toolbox  
 - Optimization Toolbox  
