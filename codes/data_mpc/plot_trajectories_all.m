@@ -1,20 +1,20 @@
 %% plot_trajectories_all.m
 % Batch visualization for MPC sweep (AMPC, CDBF, APSC)
 % Matches files saved by run_closed_loop_parallel.m:
-%   data_mpc/data_<CTRL>_multi_<condition>_H10_prior_... .mat
-% where the param string starts with a leading underscore.
+% data_mpc/data_<CTRL>_multi_<condition>_H10_prior_... .mat
+% -> Trims last step if there are 401 time steps.
 
 clc;
 
 % ---------------- User knobs ----------------
-baseDir         = ".";     % where the MAT files live
-outRoot         = "figs_mpc";     % where to save figures
-Hstr            = "H10";          % horizon string used in filenames
-numToPlot       = 10;             % number of Monte Carlo trajectories per controller
-saveEPS         = true;           % also save EPS alongside PNG
-makeOverlay     = true;           % single-axes comparison
-makeSideBySide  = true;           % 3-panel tiledlayout
-makeSummaryCSV  = true;           % save simple metrics per case
+baseDir         = ".";           % where the MAT files live (use "." if this script is inside data_mpc/)
+outRoot         = "figs_mpc";    % where to save figures
+Hstr            = "H10";         % horizon string used in filenames
+numToPlot       = 10;            % number of Monte Carlo trajectories per controller
+saveEPS         = true;          % also save EPS alongside PNG
+makeOverlay     = true;          % single-axes comparison
+makeSideBySide  = true;          % 3-panel tiledlayout
+makeSummaryCSV  = true;          % save simple metrics per case
 % --------------------------------------------
 
 % These lists must match the sweep used during simulation
@@ -70,6 +70,12 @@ for mu = mu_gt_list
         continue;
     end
 
+    % ------- TRIM LAST STEP IF T == 401 (ALWAYS) -------
+    AMPC = trim_last_step_if_needed(AMPC);
+    CDBF = trim_last_step_if_needed(CDBF);
+    APSC = trim_last_step_if_needed(APSC);
+    % ---------------------------------------------------
+
     % Destination folder
     outDir = fullfile(outRoot, condition, erase(param_str, "_")); % folder name without leading _
     if ~isfolder(outDir), mkdir(outDir); end
@@ -82,23 +88,23 @@ for mu = mu_gt_list
             figA.Position(3:4) = [700 600];
             hold on; box on; axis equal;
 
-            % Legend exemplars
+            % Legend exemplars (use full trimmed time range)
             i1 = 1;
-            plot(rmmissing(APSC.TRAJ(i1,1:end-1,1)), rmmissing(APSC.TRAJ(i1,1:end-1,2)), ...
+            plot(rmmissing(APSC.TRAJ(i1,:,1)), rmmissing(APSC.TRAJ(i1,:,2)), ...
                 'Color', [0 0.4470 0.7410], 'DisplayName','Proposed (APSC)', 'LineWidth', 1.2);
             plot(rmmissing(AMPC.TRAJ(i1,:,1)), rmmissing(AMPC.TRAJ(i1,:,2)), ...
                 'Color', [0.8500 0.3250 0.0980], 'DisplayName','Adaptive MPC', 'LineWidth', 1.2);
-            plot(rmmissing(CDBF.TRAJ(i1,1:end-1,1)), rmmissing(CDBF.TRAJ(i1,1:end-1,2)), ...
+            plot(rmmissing(CDBF.TRAJ(i1,:,1)), rmmissing(CDBF.TRAJ(i1,:,2)), ...
                 'Color', [0.9290 0.6940 0.1250], 'DisplayName','CDBF', 'LineWidth', 1.2);
 
             % Additional trajectories
             nPlot = min([numToPlot, size(APSC.TRAJ,1), size(AMPC.TRAJ,1), size(CDBF.TRAJ,1)]);
             for k = 1:nPlot
-                plot(rmmissing(APSC.TRAJ(k,1:end-1,1)), rmmissing(APSC.TRAJ(k,1:end-1,2)), ...
+                plot(rmmissing(APSC.TRAJ(k,:,1)), rmmissing(APSC.TRAJ(k,:,2)), ...
                     'Color', [0 0.4470 0.7410], 'HandleVisibility','off');
                 plot(rmmissing(AMPC.TRAJ(k,:,1)), rmmissing(AMPC.TRAJ(k,:,2)), ...
                     'Color', [0.8500 0.3250 0.0980], 'HandleVisibility','off');
-                plot(rmmissing(CDBF.TRAJ(k,1:end-1,1)), rmmissing(CDBF.TRAJ(k,1:end-1,2)), ...
+                plot(rmmissing(CDBF.TRAJ(k,:,1)), rmmissing(CDBF.TRAJ(k,:,2)), ...
                     'Color', [0.9290 0.6940 0.1250], 'HandleVisibility','off');
             end
 
@@ -139,13 +145,8 @@ for mu = mu_gt_list
                 nexttile;
                 hold on; axis equal; box on;
                 for k = 1:nPlot
-                    if controllers{c}=="AMPC"
-                        tx = rmmissing(dataCell{c}.TRAJ(k,:,1));
-                        ty = rmmissing(dataCell{c}.TRAJ(k,:,2));
-                    else
-                        tx = rmmissing(dataCell{c}.TRAJ(k,1:end-1,1));
-                        ty = rmmissing(dataCell{c}.TRAJ(k,1:end-1,2));
-                    end
+                    tx = rmmissing(dataCell{c}.TRAJ(k,:,1));
+                    ty = rmmissing(dataCell{c}.TRAJ(k,:,2));
                     plot(tx, ty, 'Color', colors{c});
                 end
                 drawLaneBounds();
@@ -228,6 +229,23 @@ function drawLaneBounds()
     right_y = [t*0-5, 40+45*sin(pi/2*(t-1)), t*30+40];
     plot(left_x, left_y, 'k', 'HandleVisibility','off');
     plot(right_x, right_y, 'k', 'HandleVisibility','off');
+end
+
+function S = trim_last_step_if_needed(S)
+% Always trims the last time step if there are 401 entries
+    % infer T from any present field
+    if isfield(S,'PROB'),  T = size(S.PROB,2);
+    elseif isfield(S,'SPEED'), T = size(S.SPEED,2);
+    elseif isfield(S,'TRAJ'),  T = size(S.TRAJ,2);
+    else, return; end
+
+    if T == 401
+        if isfield(S,'PROB'),  S.PROB  = S.PROB(:,1:T-1); end
+        if isfield(S,'SPEED'), S.SPEED = S.SPEED(:,1:T-1); end
+        if isfield(S,'ETIME'), S.ETIME = S.ETIME(:,1:T-1); end
+        if isfield(S,'TRAJ'),  S.TRAJ  = S.TRAJ(:,1:T-1,:); end
+        if isfield(S,'STATE'), S.STATE = S.STATE(:,1:T-1,:); end
+    end
 end
 
 function v = row_min_ignore_nan(M)
