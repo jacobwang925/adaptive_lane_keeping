@@ -16,6 +16,8 @@ colsProb = ["APSC_minProb_mean","AMPC_minProb_mean","CDBF_minProb_mean"];
 colsVx   = ["APSC_meanVx","AMPC_meanVx","CDBF_meanVx"];
 
 
+main_draft = false; % smaller plot in main draft to save space
+
 threshold = 0.3; % filtering infeasible cases
 % threshold = 0; % all cases
 
@@ -47,7 +49,12 @@ for i = 1:3
 end
 
 % --- Plot ---
-f = figure('Color','w','Units','inches','Position',[2 2 5 4]);
+
+if main_draft
+    f = figure('Color','w','Units','inches','Position',[2 2 5 3]);
+else
+    f = figure('Color','w','Units','inches','Position',[2 2 5 4]);
+end
 hold on; grid on; box on;
 set(gca,'FontSize',12);
 
@@ -83,11 +90,18 @@ if threshold == 0
     saveas(f,'tradeoff_safety_efficiency_all','epsc')
     fprintf('Saved: tradeoff_safety_efficiency_all.png\n');
 elseif threshold == 0.3
-    ylim([0.3 1]); 
-    axis tight;
-    saveas(f,'tradeoff_safety_efficiency.png');
-    saveas(f,'tradeoff_safety_efficiency','epsc')
-    fprintf('Saved: tradeoff_safety_efficiency.png\n');
+    if main_draft
+        ylim([0.5 1]);
+        saveas(f,'tradeoff_safety_efficiency_main.png');
+        saveas(f,'tradeoff_safety_efficiency_main','epsc')
+        fprintf('Saved: tradeoff_safety_efficiency_main.png\n');
+    else
+        ylim([0.3 1]); 
+        axis tight;
+        saveas(f,'tradeoff_safety_efficiency.png');
+        saveas(f,'tradeoff_safety_efficiency','epsc')
+        fprintf('Saved: tradeoff_safety_efficiency.png\n');
+    end
 end
 
 %% --- Helper for covariance ellipse ---

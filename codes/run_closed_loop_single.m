@@ -1,4 +1,4 @@
-function res = run_closed_loop_single(prior_ic, mes_var, emax)
+function res = run_closed_loop_single(prior_ic, mes_var, emax, mu_gt, v0)
 % Main program for closed-loop simulation
 
 %%%  Path to model %%%%%%%%%%%
@@ -37,7 +37,7 @@ TERM_LAT_ERROR  = '100';
 set_param([mdl '/termination_lat'], 'Value', TERM_LAT_ERROR)
 
 % Initial state
-V0 = 20 * 1000/3600; % longitudinal speed [m/s]
+V0 = v0 * 1000/3600; % longitudinal speed [m/s]
 Re = 0.325; % Wheel radius [m]
 INIT_DYN  = [V0, 0, 0, 0];
 INIT_OMG  = V0/Re*ones(1,4); 
@@ -100,7 +100,7 @@ assignin('base','onlineData',onlineData);
 disp('--- start simulation ----')
 
 % Friction coefficient
-mu = 0.3;
+mu = mu_gt;
 set_param([mdl '/true_friction_coeff'],'Value', num2str(mu) )
 
 res_sim = sim([mdl '.slx']);
@@ -120,6 +120,16 @@ BP    = renamevars( res_sim.BP.extractTimetable,  'Data', 'BP');
 %save 'data/data_Nominal_mu09' prob dist state input force slipA slipR traj LfP LgP BP
 
 disp('--- completed ----')
+
+% Compute and print average longitudinal speed
+% Extract longitudinal velocity (Vx = first column of state)
+if istimetable(state)
+    Vx = state.state(:,1);
+    meanVx = mean(Vx,'omitnan');
+    stdVx  = std(Vx,'omitnan');
+    fprintf('Average longitudinal speed: %.2f m/s (std: %.2f)\n', meanVx, stdVx);
+    fprintf('Equivalent average speed: %.2f km/h\n', meanVx * 3.6);
+end
 
 % package outputs
 res = struct('prob',prob,'dist',dist,'state',state,'input',input, ...
