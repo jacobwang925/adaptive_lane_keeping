@@ -4,15 +4,18 @@ clear
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % load data
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% AMPC_icy = load("data_AMPC_multi_icy_H05.mat");
-% CDBF_icy = load("data_CDBF_multi_icy_H05.mat");
-% APSC_icy = load("data_APSC_multi_icy_H05.mat");
+% AMPC = load("data_AMPC_multi_icy_H10.mat");
+% CDBF = load("data_CDBF_multi_icy_H10.mat");
+% APSC = load("data_APSC_multi_icy_H10.mat");
+AMPC = load("data_AMPC_multi_icy_H20.mat");
+CDBF = load("data_CDBF_multi_icy_H20.mat");
+APSC = load("data_APSC_multi_icy_H20.mat");
 % AMPC_icy = load("data_mpc/data_AMPC_multi_icy_H10_prior_0p3_0p01_mesvar_0p1_emax_15.mat");
 % CDBF_icy = load("data_mpc/data_CDBF_multi_icy_H10_prior_0p3_0p01_mesvar_0p1_emax_15.mat");
 % APSC_icy = load("data_mpc/data_APSC_multi_icy_H10_prior_0p3_0p01_mesvar_0p1_emax_15.mat");
-AMPC = load("data_mpc/data_AMPC_multi_icy_H10_prior_0p3_0p05_mesvar_0p05_emax_10.mat");
-CDBF = load("data_mpc/data_CDBF_multi_icy_H10_prior_0p3_0p05_mesvar_0p05_emax_10.mat");
-APSC = load("data_mpc/data_APSC_multi_icy_H10_prior_0p3_0p05_mesvar_0p05_emax_10.mat");
+% AMPC = load("data_mpc/data_AMPC_multi_icy_H10_prior_0p3_0p05_mesvar_0p05_emax_10.mat");
+% CDBF = load("data_mpc/data_CDBF_multi_icy_H10_prior_0p3_0p05_mesvar_0p05_emax_10.mat");
+% APSC = load("data_mpc/data_APSC_multi_icy_H10_prior_0p3_0p05_mesvar_0p05_emax_10.mat");
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -37,7 +40,7 @@ plot(traj_x, traj_y, Color='#0072BD', DisplayName='Proposed')
 % Adaptive MPC
 traj_x = rmmissing( AMPC.TRAJ(i, :, 1) );
 traj_y = rmmissing( AMPC.TRAJ(i, :, 2) );
-plot(traj_x, traj_y, Color='#D95319', DisplayName='Adaptive MPC')
+plot(traj_x, traj_y, Color='#D95319', DisplayName='AMPC')
 
 % Adaptive MPC + CDBF
 traj_x = rmmissing( CDBF.TRAJ(i, 1:end-1, 1) );
@@ -74,9 +77,14 @@ right = plot(right_x, right_y, Color='k', HandleVisibility='off');
 hold off
 xlim([0, 90])
 ylim([-20, 70])
-ylim([-20, 150])
+ylim([-20, 70])
 xlabel('Distance (m)')
 ylabel('Distance (m)')
 legend(Location="northwest")
-saveas(f,'fig_trajectory','epsc')
-saveas(f,'fig_trajectory','png')
+set(gca, 'FontSize', 14);      % axes tick labels
+% saveas(f,'fig_trajectory','epsc')
+% saveas(f,'fig_trajectory','png')
+% saveas(f,'fig_trajectory_H10','epsc')
+% saveas(f,'fig_trajectory_H10','png')
+saveas(f,'fig_trajectory_H20','epsc')
+saveas(f,'fig_trajectory_H20','png')

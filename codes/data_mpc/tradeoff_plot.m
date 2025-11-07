@@ -16,7 +16,7 @@ colsProb = ["APSC_minProb_mean","AMPC_minProb_mean","CDBF_minProb_mean"];
 colsVx   = ["APSC_meanVx","AMPC_meanVx","CDBF_meanVx"];
 
 
-main_draft = false; % smaller plot in main draft to save space
+main_draft = true; % smaller plot in main draft to save space
 
 threshold = 0.3; % filtering infeasible cases
 % threshold = 0; % all cases
@@ -78,10 +78,19 @@ xlabel('Average Speed (m/s)', 'FontSize',12);
 ylabel('Minimum Safety Probability', 'FontSize',12);
 % title('Safety–Efficiency Tradeoff', 'FontSize',13);
 
-legend({'APSC samples','APSC mean','APSC variance', ...
+if main_draft
+    legend({'Proposed samples','Proposed mean','Proposed variance', ...
         'AMPC samples','AMPC mean','AMPC variance', ...
         'CDBF samples','CDBF mean','CDBF variance'}, ...
         'Location','southwest','FontSize',10,'Box','on');
+else
+    legend({'APSC samples','APSC mean','APSC variance', ...
+        'AMPC samples','AMPC mean','AMPC variance', ...
+        'CDBF samples','CDBF mean','CDBF variance'}, ...
+        'Location','southwest','FontSize',10,'Box','on');
+end
+
+
 
 if threshold == 0
     xlim([4, 9]);
@@ -92,6 +101,7 @@ if threshold == 0
 elseif threshold == 0.3
     if main_draft
         ylim([0.5 1]);
+        xlim([6, 9]);
         saveas(f,'tradeoff_safety_efficiency_main.png');
         saveas(f,'tradeoff_safety_efficiency_main','epsc')
         fprintf('Saved: tradeoff_safety_efficiency_main.png\n');
