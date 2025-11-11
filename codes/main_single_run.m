@@ -47,7 +47,7 @@ disp('--- defining MPC controller ----')
 % dimensions
 nlobj = nlmpc(12,3,2);    
 nlobj.Ts = 0.2;
-nlobj.PredictionHorizon = 10;
+nlobj.PredictionHorizon = 30;
 nlobj.ControlHorizon = 2;
 % state equation and parameters
 nlobj.Model.StateFcn =  "fun_system_dynamics";
