@@ -37,19 +37,20 @@ The performance of these controllers is compared in terms of **computation time*
 ├─ codes/
 │  ├─ mdl_closed_loop_mpc.slx     ← Main Simulink model
 │  ├─ main_single_run.m           ← Run one scenario (quick test)
-│  ├─ main_parallel_runs.m        ← Run multiple Monte Carlo simulations
+│  ├─ main_parallel_runs.m        ← Run multiple parallel simulations
+│  ├─ param_sweep_parallel.m      ← Run massive parallel ablation simulations
 │  ├─ impl_controller/            ← MPC, PSC, CDBF implementations
 │  ├─ impl_estimator/             ← Friction coefficient estimator
 │  ├─ impl_model/                 ← Vehicle and dynamics models
 │  ├─ impl_road/                  ← Road description
 │  ├─ fun_*                       ← System dynamics, inequality constraints, etc.
 │  ├─ mfun_*                      ← Imprementations of MATLAB Functions in Simulink model
-│  └─ data_mpc/                   ← Simulation results (saved .mat files)
-└─ docs/                          ← Figures, notes
+│  └─ data_mpc/                   ← Simulation results (saved .mat files) and plotting scripts
+│       └─ figs_mpc/              ← Ablation trajectory visualizations and statistics
+└─ docs/                          ← Simulink Documentations
 ```
 
 For more details on Simulink implementation, see [docs/model_overview.md](docs/model_overview.md).
-
 
 ---
 
@@ -77,7 +78,7 @@ run('main_single_run.m')
 - Visualization can be turned on/off inside the script:
     ```matlab
     set_param([mdl '/visualization'],'Commented','off') % 'on' to disable
-    ```   
+    ```
 - For quick checks, the number of Monte Carlo samples for safety probability is initially set to `1`:
     ```matlab
     set_param([mdl '/SafeProbabilityMC'],'snum','1') % change to 100 for reproduction
@@ -152,7 +153,6 @@ set_param([mdl '/mes_var'], 'Value', '0.1')                  % Measurement noise
 - The prior mean/variance can be adjusted depending on the scenario.
 - `mes_var` controls the assumed measurement noise variance used in the estimator.
 
-
 ---
 
 ## 6. Outputs
@@ -174,3 +174,41 @@ data_mpc/data_CDBF_multi_icy_H10.mat
 data_mpc/data_APSC_multi_icy_H10.mat
 ```
 
+## 
+
+## 7. Parameter ablation runs
+
+To reproduce the ablation experiments and trade-off visualizations:
+
+```
+cd codes
+run('param_sweep_parallel.m')
+```
+
+- This script performs **massive parameter sweeps** (different friction ranges, estimator settings, and controller types).
+
+- It will **take a long time** — approximately **2 days on a workstation with 20 CPU cores**.
+
+- Results are automatically stored under:
+
+  ```
+  codes/data_mpc/
+  ```
+
+After the sweep completes:
+
+1. **Visualize all trajectories and summary statistics:**
+
+   ```
+   run('data_mpc/plot_trajectories_all.m')
+   ```
+
+   This generates aggregated trajectory plots and performance metrics inside `data_mpc/figs_mpc/`.
+
+2. **Reproduce the safety–efficiency trade-off plot:**
+
+   ```
+   run('data_mpc/tradeoff_plot.m')
+   ```
+
+   This script recreates the final trade-off figures used in the paper or documentation.
