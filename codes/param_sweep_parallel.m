@@ -2,20 +2,20 @@
 clear; clc;
 
 % --- Define Parameter Lists for Sweeping ---
-prior_ic1_list = [0.3, 0.5, 0.9];
-prior_ic2_list = [0.05, 0.3];
-mes_var_list   = [0.05, 0.3];
-emax_list      = [3, 5, 10];
-mu_gt_list     = [0.3, 0.5, 0.8];
+% prior_ic1_list = [0.3, 0.5, 0.9];
+% prior_ic2_list = [0.05, 0.3];
+% mes_var_list   = [0.05, 0.3];
+% emax_list      = [3, 5, 10];
+% mu_gt_list     = [0.3, 0.5, 0.8];
 
 v0 = 10; % initial velocity
 
 % smoke test
-% prior_ic1_list = [0.5];
-% prior_ic2_list = [0.05];
-% mes_var_list   = [0.05];
-% emax_list      = [5];
-% mu_gt_list     = [0.3];
+prior_ic1_list = [0.5,  0.9];
+prior_ic2_list = [0.05, 0.3];
+mes_var_list   = [0.05];
+emax_list      = [3, 5];
+mu_gt_list     = [0.8];
 
 % --- Set Save Flag ---
 saveData = true;
