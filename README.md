@@ -212,3 +212,33 @@ After the sweep completes:
    ```
 
    This script recreates the final trade-off figures used in the paper or documentation.
+
+## 8. LLM Ablation Experiments
+
+We introduce two experiment scripts that could reproduce the **LLM-driven preference-aware experiments**.  
+
+- `run_llm_ablation_control.m`  
+  Evaluates how LLMs infer **control-related safety parameters**  from natural-language user inputs, and how these inferred parameters affect closed-loop lane-keeping performance  
+  across multiple controllers.
+
+  - **Run 1** uses the *aggressive* user input  
+  - **Run 2** uses the *conservative* user input (and receives feedback from Run 1)
+
+- `run_llm_ablation_estimator.m`  
+  Evaluates how LLMs infer **control-related safety parameters**   when given the **same** user input for two runs. 
+  - **Run 1** use *dry and unsure* user input
+  - **Run 2** use *dry and unsure* user input (and receives feedback from Run 1)
+
+The result files are stored in 
+  ```
+  LLM/llm_results
+  ```
+To view the data, please use `show_result_control.m` and `show_result_estimator.m`.
+
+
+### LLMs evaluated
+- GPT-4o-mini  
+- GPT-3.5-Turbo  
+- Gemini-2.5-Flash  
+- Gemini-2.0-Flash  
+- DeepSeek-Chat
