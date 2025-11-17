@@ -47,7 +47,11 @@ The performance of these controllers is compared in terms of **computation time*
 │  ├─ mfun_*                      ← Imprementations of MATLAB Functions in Simulink model
 │  └─ data_mpc/                   ← Simulation results (saved .mat files) and plotting scripts
 │       └─ figs_mpc/              ← Ablation trajectory visualizations and statistics
-└─ docs/                          ← Simulink Documentations
+├─  docs/                         ← Simulink Documentations
+└─  LLM/
+│  ├─ llm_results/                ← Ablation results
+│  └─ user_inputs/                ← User commands
+  
 ```
 
 For more details on Simulink implementation, see [docs/model_overview.md](docs/model_overview.md).
@@ -215,26 +219,39 @@ After the sweep completes:
 
 ## 8. LLM Ablation Experiments
 
-We introduce two experiment scripts that could reproduce the **LLM-driven preference-aware experiments**.  
-
-- `run_llm_ablation_control.m`  
-  Evaluates how LLMs infer **control-related safety parameters**  from natural-language user inputs, and how these inferred parameters affect closed-loop lane-keeping performance  
-  across multiple controllers.
-
+To reproduce the ablation experiments reported in the tables,
+```
+cd codes
+run('run_llm_ablation_control.m')
+```
+This script evaluates how different LLMs infer control-related safety parameters from natural-language user inputs, and how these inferred parameters alter the closed-loop lane-keeping performance across multiple controllers.
   - **Run 1** uses the *aggressive* user input  
   - **Run 2** uses the *conservative* user input (and receives feedback from Run 1)
 
-- `run_llm_ablation_estimator.m`  
-  Evaluates how LLMs infer **control-related safety parameters**   when given the **same** user input for two runs. 
+```
+cd codes
+run('run_llm_ablation_estimator.m')
+```
+ 
+This script evaluates how LLMs infer control-related safety parameters when the same user input is used for both runs.
   - **Run 1** use *dry and unsure* user input
   - **Run 2** use *dry and unsure* user input (and receives feedback from Run 1)
 
-The result files are stored in 
+All result files are saved to:
   ```
   LLM/llm_results
   ```
-To view the data, please use `show_result_control.m` and `show_result_estimator.m`.
-
+To visualize the results:
+```
+cd codes
+run('show_result_control.m')
+```
+and
+```
+cd codes
+run('show_result_estimator.m')
+```
+Please ensure you provide your own API keys in the code before execution.
 
 ### LLMs evaluated
 - GPT-4o-mini  
