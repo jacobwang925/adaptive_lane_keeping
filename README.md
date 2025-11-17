@@ -49,8 +49,8 @@ The performance of these controllers is compared in terms of **computation time*
 │       └─ figs_mpc/              ← Ablation trajectory visualizations and statistics
 ├─  docs/                         ← Simulink Documentations
 └─  LLM/
-│  ├─ llm_results/                ← Ablation results
-│  └─ user_inputs/                ← User commands
+   ├─ llm_results/                ← Ablation results
+   └─ user_inputs/                ← User commands
   
 ```
 
