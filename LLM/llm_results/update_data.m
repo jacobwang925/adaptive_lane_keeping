@@ -2,7 +2,7 @@
 currentPath = pwd;
 parentPath = fileparts(currentPath);
 for method = ["APSC", "AMPC", "CDBF"]
-    for model = ["gpt", "gpt35", "gemini", "gemini20", "deepseek"]
+    for model = ["gpt40", "gpt35", "gemini25", "gemini20", "deepseek"]
         road = "dry_v";
 
         filename = method + "_" + model + "_control_" + road + ".mat";

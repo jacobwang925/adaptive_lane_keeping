@@ -73,7 +73,6 @@ resp = generate(model, prompt, Temperature=0.2, MaxNumTokens=300);
 
 elseif contains(p.Results.ModelName, "gemini", "IgnoreCase", true)
     fprintf("working with "+ p.Results.ModelName)
-    setenv('X-goog-api-key','...');
     apiKey = getenv('X-goog-api-key');
     url = "https://generativelanguage.googleapis.com/v1beta/models/" + p.Results.ModelName + ":generateContent";
     fullUrl = url + "?key=" + apiKey;
@@ -105,11 +104,11 @@ elseif contains(p.Results.ModelName, "gemini", "IgnoreCase", true)
 
 elseif contains(p.Results.ModelName, "deepseek", "IgnoreCase", true)
     fprintf("working with "+ p.Results.ModelName + "\n")
-    deepseekApiKey = '...';
+    apiKey = getenv('deepseekApiKey');
     apiUrl = 'https://api.deepseek.com/chat/completions';
     
     % Prepare the request headers
-    headers = {'Authorization', ['Bearer ' deepseekApiKey]; ...
+    headers = {'Authorization', ['Bearer ' apiKey]; ...
                'Content-Type', 'application/json'};
 
     % Prepare the messages with system prompt and user prompt

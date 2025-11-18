@@ -1,40 +1,23 @@
-% clear all;
 % control result
 
-for method = ["APSC", "AMPC", "CDBF"]
-% for method = ["CDBF"]   
+clear all;
+currentPath = pwd;
+parentPath = fileparts(currentPath);
+road = "dry";
 
-    for model = ["gpt", "gpt35", "gemini", "gemini20", "deepseek"]
-    % for model = ["gpt"]
-        % model = "gemini20";
-        road = "dry_v";
+for method = ["APSC", "AMPC", "CDBF"]
+    for model = ["gpt4o", "gpt35", "gemini25", "gemini20", "deepseek"]
 
         filename = method + "_" + model + "_control_" + road + ".mat";
-        full_path  = "/Users/dengxiyu/Desktop/adaptive_lane_keeping/LLM/llm_results/"+filename;
+        full_path  = parentPath+"/LLM/llm_results/"+filename;
         load(full_path);
         thre = 3;
 
-        % GPT
-        % load("CDBF_gpt_control_icy.mat");
-        % load("CDBF_gpt35_control_icy.mat");
-
-        % Gemini
-        % % load("APSC_gemini_control_icy.mat");
-        % load("CDBF_gemini20_control_icy.mat")
-
-        % % Deepseek
-        % load("CDBF_deepseek_control_icy.mat");
-
-
-        % fprintf("Prior:");
-        % fprintf("Run Aggressive: mean: %.2f, std:%.2f\n", mean(abs(T.MU0_Aggr)), std(abs(T.MU0_Aggr)));
-        % fprintf("Run Conservative: mean: %.2f, std:%.2f\n", mean(abs(T.MU0_Cons)), std(abs(T.MU0_Cons)));
-
-        if model == "gpt"
+        if model == "gpt4o"
             model_name = "GPT-4o-mini";
         elseif model == "gpt35"
             model_name = "GPT-3.5 Turbo";
-        elseif model == "gemini"
+        elseif model == "gemini25"
             model_name = "Gemini 2.5 Flash";
         elseif model == "gemini20"
             model_name = "Gemini 2.0 Flash";

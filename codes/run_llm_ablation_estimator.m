@@ -1,4 +1,10 @@
 clear; clc; close all;
+
+% Please set you api keys here
+setenv('OPENAI_API_KEY','');   
+setenv('X-goog-api-key','');
+setenv('deepseekApiKey','');
+
 %
 % --- Helper functions ---
 function S_new = map_to_closest(S, lists)
@@ -50,10 +56,10 @@ for method = ["APSC", "AMPC", "CBDF"]
     horizon = 10;
 
     % LLM model
-    for llm = ["gpt", "gpt35", "gemini", "gemini20", "deepseek"]
+    for llm = ["gpt4o", "gpt35", "gemini25", "gemini20", "deepseek"]
 
         % gpt
-        if llm == "gpt"
+        if llm == "gpt4o"
             model = "gpt-4o-mini";
             matname = parentPath + "/LLM/llm_results/" + method+"_gpt_estimator_unsure_"+road+"_v.mat";
         end
@@ -64,25 +70,19 @@ for method = ["APSC", "AMPC", "CBDF"]
         end
 
         % gemini
-        if llm == "gemini"
+        if llm == "gemini25"
             model = "gemini-2.5-flash";
-            url = "https://generativelanguage.googleapis.com/v1beta/models/" + model + ":generateContent";
-            setenv('X-goog-api-key','...');
-            apiKey = getenv('X-goog-api-key');
             matname = parentPath + "/LLM/llm_results/" + method+"_gemini_estimator_unsure_"+road+"_v.mat";
         end
 
         if llm == "gemini20"
             model = "gemini-2.0-flash";
-            setenv('X-goog-api-key','...');
-            apiKey = getenv('X-goog-api-key');
             matname = parentPath + "/LLM/llm_results/" + method+"_gemini20_estimator_unsure_"+road+"_v.mat";
         end
 
         % deepseek
         if llm == "deepseek"
             model = "deepseek-chat";
-            url = "https://api.deepseek.com/chat/completions" + model;
             matname = parentPath + "/LLM/llm_results/" + method+"_deepseek_estimator_unsure_"+road+"_v.mat";
         end
 

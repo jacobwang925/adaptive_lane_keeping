@@ -1,5 +1,9 @@
 clear; clc; close all;
-%
+
+% Please set you api keys here
+setenv('OPENAI_API_KEY','');   
+setenv('X-goog-api-key','');
+setenv('deepseekApiKey','');
 
 % --- Helper functions ---
 
@@ -102,10 +106,10 @@ for method = ["APSC", "AMPC", "CBDF"]
     lists.emax_list      = [3, 5, 10];
 
 
-    for llm = ["gpt", "gpt35", "gemini", "gemini20", "deepseek"]
+    for llm = ["gpt4o", "gpt35", "gemini25", "gemini20", "deepseek"]
         % for llm = ["deepseek"]
         % gpt
-        if llm == "gpt"
+        if llm == "gpt4o"
             model = "gpt-4o-mini";
             matname = parentPath + "/LLM/llm_results/" + method+"_gpt_control_"+road+"_v.mat";
         end
@@ -116,7 +120,7 @@ for method = ["APSC", "AMPC", "CBDF"]
         end
 
         % gemini
-        if llm == "gemini"
+        if llm == "gemini25"
             model = "gemini-2.5-flash";
             url = "https://generativelanguage.googleapis.com/v1beta/models/" + model + ":generateContent";
             setenv('X-goog-api-key','...');

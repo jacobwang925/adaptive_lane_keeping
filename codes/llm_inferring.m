@@ -48,7 +48,7 @@ prompt = [
     " Output ONLY JSON in this exact shape: " + ...
     " {""e_max"":0,""mu_0"":0.0,""sigma_0"":0.0,""bar_sigma"":0.0,""init_v"":0,""assumptions"":{""style"":"""",""road"":"""",""speed_kmh"":0,""lane_quality"":""""},""rationale"":""""} " + ...
     " Ensure values are from the allowed sets and remember these are initial priors, not ground truth."
-];
+    ];
 % "Valid ranges: e_max ∈ {3,5,10}; mu_0 ∈ {0.2,0.9}; sigma_0 ∈ [0.01,0.5]; bar_sigma ∈ [0.01,0.5]. " + ...
 
 if contains(p.Results.ModelName, "gpt", "IgnoreCase", true)
@@ -60,26 +60,26 @@ if contains(p.Results.ModelName, "gpt", "IgnoreCase", true)
 elseif contains(p.Results.ModelName, "gemini", "IgnoreCase", true)
     % --- Gemini branch ---
     fprintf("working with "+ p.Results.ModelName)
+    apiKey = getenv('X-goog-api-key');
     user_prompt = sprintf("\nUser instruction: %s", user_input);
     url = "https://generativelanguage.googleapis.com/v1beta/models/" + p.Results.ModelName + ":generateContent";
     fullUrl = url + "?key=" + apiKey;
 
-
-    full_prompt = prompt + user_prompt; 
+    full_prompt = prompt + user_prompt;
 
     body = struct("contents", struct("role", "user", "parts", struct("text", full_prompt)), ...
         "generationConfig", struct( ...
-            "temperature", 0.2, ...
-            "maxOutputTokens", 8192, ...
-            "candidateCount", 1 ...
+        "temperature", 0.2, ...
+        "maxOutputTokens", 8192, ...
+        "candidateCount", 1 ...
         ) ...
-    );
+        );
 
     opts = weboptions( ...
-        "HeaderFields", {'x-goog-api-key', apiKey}, ... % <-- ADDED COMMA HERE
+        "HeaderFields", {'x-goog-api-key', apiKey}, ...
         "MediaType","application/json", ...
         "Timeout",60 ...
-    );
+        );
 
     % === Call Gemini ===
     resp = webwrite(fullUrl, body, opts);
@@ -88,43 +88,44 @@ elseif contains(p.Results.ModelName, "gemini", "IgnoreCase", true)
     resp = resp.candidates(1).content.parts(1).text;
 
 elseif contains(p.Results.ModelName, "deepseek", "IgnoreCase", true)
+    % --- Deepseek branch ---
     fprintf("working with "+ p.Results.ModelName + "\n")
     deepseekApiKey = '...';
     apiUrl = 'https://api.deepseek.com/chat/completions';
-    
+
     % Prepare the request headers
     headers = {'Authorization', ['Bearer ' deepseekApiKey]; ...
-               'Content-Type', 'application/json'};
-    
+        'Content-Type', 'application/json'};
+
     % Prepare the messages with system prompt and user prompt
     messages = [
         struct('role', 'system', 'content', prompt);
         struct('role', 'user', 'content', user_input)
-    ];
-    
+        ];
+
     % Create request body
     requestBody = struct(...
         'model', p.Results.ModelName, ...
         'messages', messages, ...
         'stream', false, ...
         'max_tokens', 2048 ...
-    );
-    
+        );
+
     % Convert to JSON
     jsonBody = jsonencode(requestBody);
-    
+
     % Make API call
     options = weboptions(...
         'RequestMethod', 'post', ...
         'HeaderFields', headers, ...
         'MediaType', 'application/json', ...
         'Timeout', 60 ...
-    );
-    
+        );
+
 
     apiResponse = webwrite(apiUrl, jsonBody, options);
     resp = apiResponse.choices(1).message.content;
-    
+
     % % Extract the response content
     % if isfield(apiResponse, 'choices') && ~isempty(apiResponse.choices)
     %     resp = apiResponse.choices(1).message.content;
