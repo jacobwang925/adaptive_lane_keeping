@@ -252,6 +252,7 @@ cd codes
 run('show_result_estimator.m')
 ```
 Please ensure you provide your own API keys in the code before execution.
+Matlab add-on Large Language Models (LLMs) with MATLAB is required (https://www.mathworks.com/matlabcentral/fileexchange/163796-large-language-models-llms-with-matlab).
 
 ### LLMs evaluated
 - GPT-4o-mini  
