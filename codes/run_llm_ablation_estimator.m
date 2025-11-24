@@ -50,7 +50,7 @@ retryDelay = 2;
 currentPath = pwd;
 parentPath = fileparts(currentPath);
 
-for method = ["APSC", "AMPC", "CBDF"]
+for method = ["APSC", "AMPC", "CDBF"]
 
     road = "icy";
     horizon = 10;
