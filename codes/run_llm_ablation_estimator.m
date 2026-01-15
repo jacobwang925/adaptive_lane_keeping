@@ -57,7 +57,6 @@ for method = ["APSC", "AMPC", "CDBF"]
 
     % LLM model
     for llm = ["gpt4o", "gpt35", "gemini25", "gemini20", "deepseek"]
-
         % gpt
         if llm == "gpt4o"
             model = "gpt-4o-mini";
