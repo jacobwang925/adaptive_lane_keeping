@@ -1,11 +1,10 @@
 clear; clc; close all;
 
 % Please set you api keys here
-setenv('OPENAI_API_KEY','');   
+setenv('OPENAI_API_KEY','');
 setenv('X-goog-api-key','');
 setenv('deepseekApiKey','');
 
-%
 % --- Helper functions ---
 function S_new = map_to_closest(S, lists)
 % Helper for nearest value
@@ -51,12 +50,11 @@ currentPath = pwd;
 parentPath = fileparts(currentPath);
 
 for method = ["APSC", "AMPC", "CDBF"]
-
     road = "icy";
     horizon = 10;
 
     % LLM model
-    for llm = ["gpt4o", "gpt35", "gemini25", "gemini20", "deepseek"]
+    for llm = ["gemini25", "gemini20", "deepseek"]
         % gpt
         if llm == "gpt4o"
             model = "gpt-4o-mini";
@@ -133,7 +131,7 @@ for method = ["APSC", "AMPC", "CDBF"]
                             break;
                         catch ME
                             % If this is not the last attempt, retry after delay
-                            fprintf('⚠️ Attempt %d failed: %s\n', attempt, ME.message);
+                            fprintf('Attempt %d failed: %s\n', attempt, ME.message);
                             if attempt < maxRetries
                                 fprintf('Retrying in %.1f seconds...\n', retryDelay);
                                 pause(retryDelay);
