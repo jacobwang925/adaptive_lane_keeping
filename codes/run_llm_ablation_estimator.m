@@ -58,29 +58,29 @@ for method = ["APSC", "AMPC", "CDBF"]
         % gpt
         if llm == "gpt4o"
             model = "gpt-4o-mini";
-            matname = parentPath + "/LLM/llm_results/" + method+"_gpt_estimator_unsure_"+road+"_v.mat";
+            matname = parentPath + "/LLM/llm_results/" + method+"_gpt_estimator_unsure_"+road+".mat";
         end
 
         if llm == "gpt35"
             model = "gpt-3.5-turbo";
-            matname = parentPath + "/LLM/llm_results/" + method+"_gpt35_estimator_unsure_"+road+"_v.mat";
+            matname = parentPath + "/LLM/llm_results/" + method+"_gpt35_estimator_unsure_"+road+".mat";
         end
 
         % gemini
         if llm == "gemini25"
             model = "gemini-2.5-flash";
-            matname = parentPath + "/LLM/llm_results/" + method+"_gemini_estimator_unsure_"+road+"_v.mat";
+            matname = parentPath + "/LLM/llm_results/" + method+"_gemini_estimator_unsure_"+road+".mat";
         end
 
         if llm == "gemini20"
             model = "gemini-2.0-flash";
-            matname = parentPath + "/LLM/llm_results/" + method+"_gemini20_estimator_unsure_"+road+"_v.mat";
+            matname = parentPath + "/LLM/llm_results/" + method+"_gemini20_estimator_unsure_"+road+".mat";
         end
 
         % deepseek
         if llm == "deepseek"
             model = "deepseek-chat";
-            matname = parentPath + "/LLM/llm_results/" + method+"_deepseek_estimator_unsure_"+road+"_v.mat";
+            matname = parentPath + "/LLM/llm_results/" + method+"_deepseek_estimator_unsure_"+road+".mat";
         end
 
 

@@ -1,7 +1,7 @@
 clear; clc; close all;
 
 % Please set you api keys here
-setenv('OPENAI_API_KEY','');   
+setenv('OPENAI_API_KEY','');
 setenv('X-goog-api-key','');
 setenv('deepseekApiKey','');
 
@@ -66,30 +66,30 @@ for method = ["APSC", "AMPC", "CDBF"]
         % gpt
         if llm == "gpt4o"
             model = "gpt-4o-mini";
-            matname = parentPath + "/LLM/llm_results/" + method+"_gpt_control_"+road+"_v.mat";
+            matname = parentPath + "/LLM/llm_results/" + method+"_gpt_control_"+road+".mat";
         end
 
         if llm == "gpt35"
             model = "gpt-3.5-turbo";
-            matname = parentPath + "/LLM/llm_results/" + method+"_gpt35_control_"+road+"_v.mat";
+            matname = parentPath + "/LLM/llm_results/" + method+"_gpt35_control_"+road+".mat";
         end
 
         % gemini
         if llm == "gemini25"
             model = "gemini-2.5-flash";
-            matname = parentPath + "/LLM/llm_results/" + method+"_gemini_estimator_unsure_"+road+"_v.mat";
+            matname = parentPath + "/LLM/llm_results/" + method+"_gemini_estimator_unsure_"+road+".mat";
         end
 
         if llm == "gemini20"
             model = "gemini-2.0-flash";
-            matname = parentPath + "/LLM/llm_results/" + method+"_gemini20_estimator_unsure_"+road+"_v.mat";
+            matname = parentPath + "/LLM/llm_results/" + method+"_gemini20_estimator_unsure_"+road+".mat";
         end
 
         % deepseek
         if llm == "deepseek"
             model = "deepseek-chat";
             url = "https://api.deepseek.com/chat/completions" + model;
-            matname = parentPath + "/LLM/llm_results/" + method+"_deepseek_control_"+road+"_v.mat";
+            matname = parentPath + "/LLM/llm_results/" + method+"_deepseek_control_"+road+".mat";
         end
 
         % llm code
@@ -186,14 +186,9 @@ for method = ["APSC", "AMPC", "CDBF"]
                 fprintf("\nThe groundtruth road condition is: %s, the guess road condition is %s.\n", road, map_mu_to_road(mu0));
 
 
-                if S.init_v == 10
-                    fprintf("choose init v = 10🚨\n");
-                    filename = sprintf("data_mpc/data_%s_multi_%s_H%d_prior_%s_%s_mesvar_%s_emax_%d_v0_10.mat", ...
-                        method, road, horizon, num2str(mu0), num2str(sig0), num2str(mes_var), emax);
-                else
-                    filename = sprintf("data_mpc/data_%s_multi_%s_H%d_prior_%s_%s_mesvar_%s_emax_%d.mat", ...
-                        method, road, horizon, num2str(mu0), num2str(sig0), num2str(mes_var), emax);
-                end
+
+                filename = sprintf("data_mpc/data_%s_multi_%s_H%d_prior_%s_%s_mesvar_%s_emax_%d.mat", ...
+                    method, road, horizon, num2str(mu0), num2str(sig0), num2str(mes_var), emax);
 
                 data = load(filename);
 
