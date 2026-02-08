@@ -1,73 +1,30 @@
 clear; clc; close all;
 
 % Please set you api keys here
-setenv('OPENAI_API_KEY','');   
+setenv('OPENAI_API_KEY','');
 setenv('X-goog-api-key','');
 setenv('deepseekApiKey','');
 
 % --- Helper functions ---
-
 function S_new = map_to_closest(S, lists)
-%--- robust nearest helper: works for scalars, converts list to numeric, handles junk ---
-    function v = nearest_scalar(x, list)
-        % Convert list to numeric vector
-        if isstring(list) || ischar(list)
-            list = str2double(list);        % string/char scalar -> double
-        elseif iscell(list)                 % cellstr or cell of numerics
-            list = cellfun(@str2double, list); % fine for numeric strings too
-        end
-        list = list(:);                     % column vector
-
-        % Clean x: convert strings/chars, strip commas/spaces
-        if isstring(x)
-            x = str2double(erase(x, [","," "]));
-        elseif ischar(x)
-            x = str2double(regexprep(x, '[,\s]', ''));
-        end
-
-        % If x is vector, use its first element (or mean—your choice)
-        if ~isscalar(x)
-            x = x(1);
-        end
-
-        % Guard rails
-        if isempty(list) || isempty(x) || any(isnan([x; list]))
-            v = NaN;
-            return
-        end
-
-        [~, idx] = min(abs(list - x));
-        v = list(idx);
-    end
-
-% Convert numeric-looking strings in S to doubles
-fields = ["e_max","mu_0","sigma_0","bar_sigma"];
-for f = fields
-    if isfield(S, f)
-        val = S.(f);
-        if isstring(val)
-            S.(f) = str2double(erase(val, [","," "])); % tolerate "0.30," etc.
-        elseif ischar(val)
-            S.(f) = str2double(regexprep(val, '[,\s]', ''));
-        end
-    end
-end
+% Helper for nearest value
+nearest = @(x, list) list(find(abs(list - x) == min(abs(list - x)), 1));
 
 % Initialize
 S_new = S;
 
 % Map each expected field if it exists
-if isfield(S, 'mu_0')      && isfield(lists, 'prior_ic1_list')
-    S_new.mu_0    = nearest_scalar(S.mu_0,    lists.prior_ic1_list);
+if isfield(S, 'mu_0')
+    S_new.mu_0 = nearest(S.mu_0, lists.prior_ic1_list);
 end
-if isfield(S, 'sigma_0')   && isfield(lists, 'prior_ic2_list')
-    S_new.sigma_0  = nearest_scalar(S.sigma_0, lists.prior_ic2_list);
+if isfield(S, 'sigma_0')
+    S_new.sigma_0 = nearest(S.sigma_0, lists.prior_ic2_list);
 end
-if isfield(S, 'bar_sigma') && isfield(lists, 'mes_var_list')
-    S_new.bar_sigma = nearest_scalar(S.bar_sigma, lists.mes_var_list);
+if isfield(S, 'bar_sigma')
+    S_new.bar_sigma = nearest(S.bar_sigma, lists.mes_var_list);
 end
-if isfield(S, 'e_max')     && isfield(lists, 'emax_list')
-    S_new.e_max    = nearest_scalar(S.e_max,   lists.emax_list);
+if isfield(S, 'e_max')
+    S_new.e_max = nearest(S.e_max, lists.emax_list);
 end
 end
 
@@ -93,7 +50,6 @@ currentPath = pwd;
 parentPath = fileparts(currentPath);
 
 for method = ["APSC", "AMPC", "CDBF"]
-    % method = 'AMPC';
     road = "dry";
     horizon = 10;
 
@@ -107,39 +63,33 @@ for method = ["APSC", "AMPC", "CDBF"]
 
 
     for llm = ["gpt4o", "gpt35", "gemini25", "gemini20", "deepseek"]
-        % for llm = ["deepseek"]
         % gpt
         if llm == "gpt4o"
             model = "gpt-4o-mini";
-            matname = parentPath + "/LLM/llm_results/" + method+"_gpt_control_"+road+"_v.mat";
+            matname = parentPath + "/LLM/llm_results/" + method+"_gpt_control_"+road+".mat";
         end
 
         if llm == "gpt35"
             model = "gpt-3.5-turbo";
-            matname = parentPath + "/LLM/llm_results/" + method+"_gpt35_control_"+road+"_v.mat";
+            matname = parentPath + "/LLM/llm_results/" + method+"_gpt35_control_"+road+".mat";
         end
 
         % gemini
         if llm == "gemini25"
             model = "gemini-2.5-flash";
-            url = "https://generativelanguage.googleapis.com/v1beta/models/" + model + ":generateContent";
-            setenv('X-goog-api-key','...');
-            apiKey = getenv('X-goog-api-key');
-            matname = parentPath + "/LLM/llm_results/" + method+"_gemini_control_"+road+"_v.mat";
+            matname = parentPath + "/LLM/llm_results/" + method+"_gemini_estimator_unsure_"+road+".mat";
         end
 
         if llm == "gemini20"
             model = "gemini-2.0-flash";
-            setenv('X-goog-api-key','...');
-            apiKey = getenv('X-goog-api-key');
-            matname = parentPath + "/LLM/llm_results/" + method+"_gemini20_control_"+road+"_v.mat";
+            matname = parentPath + "/LLM/llm_results/" + method+"_gemini20_estimator_unsure_"+road+".mat";
         end
 
         % deepseek
         if llm == "deepseek"
             model = "deepseek-chat";
             url = "https://api.deepseek.com/chat/completions" + model;
-            matname = parentPath + "/LLM/llm_results/" + method+"_deepseek_control_"+road+"_v.mat";
+            matname = parentPath + "/LLM/llm_results/" + method+"_deepseek_control_"+road+".mat";
         end
 
         % llm code
@@ -236,14 +186,9 @@ for method = ["APSC", "AMPC", "CDBF"]
                 fprintf("\nThe groundtruth road condition is: %s, the guess road condition is %s.\n", road, map_mu_to_road(mu0));
 
 
-                if S.init_v == 10
-                    fprintf("choose init v = 10🚨\n");
-                    filename = sprintf("data_mpc/data_%s_multi_%s_H%d_prior_%s_%s_mesvar_%s_emax_%d_v0_10.mat", ...
-                        method, road, horizon, num2str(mu0), num2str(sig0), num2str(mes_var), emax);
-                else
-                    filename = sprintf("data_mpc/data_%s_multi_%s_H%d_prior_%s_%s_mesvar_%s_emax_%d.mat", ...
-                        method, road, horizon, num2str(mu0), num2str(sig0), num2str(mes_var), emax);
-                end
+
+                filename = sprintf("data_mpc/data_%s_multi_%s_H%d_prior_%s_%s_mesvar_%s_emax_%d.mat", ...
+                    method, road, horizon, num2str(mu0), num2str(sig0), num2str(mes_var), emax);
 
                 data = load(filename);
 

@@ -90,11 +90,11 @@ elseif contains(p.Results.ModelName, "gemini", "IgnoreCase", true)
 elseif contains(p.Results.ModelName, "deepseek", "IgnoreCase", true)
     % --- Deepseek branch ---
     fprintf("working with "+ p.Results.ModelName + "\n")
-    deepseekApiKey = '...';
-    apiUrl = 'https://api.deepseek.com/chat/completions';
+    apiUrl = 'https://api.deepseek.com/v1/chat/completions';
+    apiKey = getenv('deepseekApiKey');
 
     % Prepare the request headers
-    headers = {'Authorization', ['Bearer ' deepseekApiKey]; ...
+    headers = {'Authorization', ['Bearer ' apiKey]; ...
         'Content-Type', 'application/json'};
 
     % Prepare the messages with system prompt and user prompt

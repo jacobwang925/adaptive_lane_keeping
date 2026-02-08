@@ -51,9 +51,9 @@ for mu = mu_gt_list
     param_str = sprintf("_prior_%s_%s_mesvar_%s_emax_%s", p1s, p2s, mvs, ems);
 
     % Filenames EXACTLY as your saver wrote them
-    fAMPC = fullfile(baseDir, sprintf("data_AMPC_multi_%s_%s%s_v0_10.mat", condition, Hstr, param_str));
-    fCDBF = fullfile(baseDir, sprintf("data_CDBF_multi_%s_%s%s_v0_10.mat", condition, Hstr, param_str));
-    fAPSC = fullfile(baseDir, sprintf("data_APSC_multi_%s_%s%s_v0_10.mat", condition, Hstr, param_str));
+    fAMPC = fullfile(baseDir, sprintf("data_AMPC_multi_%s_%s%s.mat", condition, Hstr, param_str));
+    fCDBF = fullfile(baseDir, sprintf("data_CDBF_multi_%s_%s%s.mat", condition, Hstr, param_str));
+    fAPSC = fullfile(baseDir, sprintf("data_APSC_multi_%s_%s%s.mat", condition, Hstr, param_str));
 
     if ~(isfile(fAMPC) && isfile(fCDBF) && isfile(fAPSC))
         fprintf('[skip] Missing files:\n  %s\n  %s\n  %s\n', fAMPC, fCDBF, fAPSC);
@@ -77,7 +77,7 @@ for mu = mu_gt_list
     % ---------------------------------------------------
 
     % Destination folder
-    outDir = fullfile(outRoot, condition, erase(param_str, "_"), 'v10'); % folder name without leading _
+    outDir = fullfile(outRoot, condition, erase(param_str, "_")); % folder name without leading _
     if ~isfolder(outDir), mkdir(outDir); end
 
     % ---- FIGURE A: Overlay ----

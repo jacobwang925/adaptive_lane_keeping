@@ -4,12 +4,12 @@ clear
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % load data
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% AMPC = load("data_AMPC_multi_icy_H10.mat");
-% CDBF = load("data_CDBF_multi_icy_H10.mat");
-% APSC = load("data_APSC_multi_icy_H10.mat");
-AMPC = load("data_AMPC_multi_icy_H20.mat");
-CDBF = load("data_CDBF_multi_icy_H20.mat");
-APSC = load("data_APSC_multi_icy_H20.mat");
+AMPC = load("data_AMPC_multi_icy_H10.mat");
+CDBF = load("data_CDBF_multi_icy_H10.mat");
+APSC = load("data_APSC_multi_icy_H10.mat");
+% AMPC = load("data_AMPC_multi_icy_H20.mat");
+% CDBF = load("data_CDBF_multi_icy_H20.mat");
+% APSC = load("data_APSC_multi_icy_H20.mat");
 % AMPC_icy = load("data_mpc/data_AMPC_multi_icy_H10_prior_0p3_0p01_mesvar_0p1_emax_15.mat");
 % CDBF_icy = load("data_mpc/data_CDBF_multi_icy_H10_prior_0p3_0p01_mesvar_0p1_emax_15.mat");
 % APSC_icy = load("data_mpc/data_APSC_multi_icy_H10_prior_0p3_0p01_mesvar_0p1_emax_15.mat");
