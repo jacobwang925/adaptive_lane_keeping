@@ -88,8 +88,8 @@ if code_gen
     funcOutput = 'fun_mpc_controller';
     Cfg = coder.config('mex');
     %Cfg.DynamicMemoryAllocation = 'off'; %% Deprecated in Matlab2025a
-    cfg.EnableDynamicMemoryAllocation = true;     %% After Matlab2025a
-    cfg.DynamicMemoryAllocationThreshold = 65536; %% After Matlab2025a
+    Cfg.EnableDynamicMemoryAllocation = true;     %% After Matlab2025a
+    Cfg.DynamicMemoryAllocationThreshold = 65536; %% After Matlab2025a
     codegen('-config',Cfg,func,'-o',funcOutput,'-args',...
         {coder.Constant(coreData), xk', mv, onlineData});
 end
