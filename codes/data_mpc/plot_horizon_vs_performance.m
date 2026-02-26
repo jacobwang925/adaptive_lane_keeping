@@ -51,9 +51,12 @@ end
 hold on
 x = [5, 10, 15, 20, 25, 30];
 
-plot(x, APSC_res, '-o', DisplayName='Proposed')
-plot(x, AMPC_res, '-o', DisplayName='AMPC')
-plot(x, CDBF_res, '-o', DisplayName='CDBF')
+plot(x, APSC_res, '-o', DisplayName='Proposed', Color='#0072BD')
+plot(x, AMPC_res, '-o', DisplayName='AMPC', Color='#D95319')
+plot(x, CDBF_res, '-o', DisplayName='CDBF', Color='#77AC30')
+% plot(x, APSC_res, '-o', DisplayName='Proposed', Color='#4C72B0')
+% plot(x, AMPC_res, '-o', DisplayName='AMPC', Color='#2CA02C')
+% plot(x, CDBF_res, '-o', DisplayName='CDBF', Color='#DD8452')
 xlabel('Horizon')
 ylabel('Time [s]')
 xlim([0 30])
@@ -84,9 +87,12 @@ for i=1:N
 end
 hold on
 x = [5, 10, 15, 20, 25, 30];
-plot(x, APSC_res, '-o', DisplayName='Proposed')
-plot(x, AMPC_res, '-o', DisplayName='AMPC')
-plot(x, CDBF_res, '-o', DisplayName='CDBF')
+plot(x, APSC_res, '-o', DisplayName='Proposed', Color='#0072BD')
+plot(x, AMPC_res, '-o', DisplayName='AMPC', Color='#D95319')
+plot(x, CDBF_res, '-o', DisplayName='CDBF', Color='#77AC30')
+% plot(x, APSC_res, '-o', DisplayName='Proposed', Color='#4C72B0')
+% plot(x, AMPC_res, '-o', DisplayName='AMPC', Color='#2CA02C')
+% plot(x, CDBF_res, '-o', DisplayName='CDBF', Color='#DD8452')
 xlabel('Horizon')
 ylabel('Safety Probability')
 xlim([0 30])
