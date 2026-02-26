@@ -32,28 +32,20 @@ num = 10;
 % For legends
 i = 1;
 
-color1 = '#0072BD';
-color2 = '#D95319';
-color3 = '#77AC30';
-
-% color1 = '#4C72B0';
-% color2 = '#2CA02C';
-% color3 = '#DD8452';
-
 % Adaptive PSC (Proposed)
 traj_x = rmmissing( APSC.TRAJ(i, 1:end-1, 1) );
 traj_y = rmmissing( APSC.TRAJ(i, 1:end-1, 2) );
-plot(traj_x, traj_y, Color=color1, DisplayName='Proposed')
+plot(traj_x, traj_y, Color='#0072BD', DisplayName='Proposed')
 
 % Adaptive MPC
 traj_x = rmmissing( AMPC.TRAJ(i, :, 1) );
 traj_y = rmmissing( AMPC.TRAJ(i, :, 2) );
-plot(traj_x, traj_y, Color=color2, DisplayName='AMPC')
+plot(traj_x, traj_y, Color='#D95319', DisplayName='AMPC')
 
 % Adaptive MPC + CDBF
 traj_x = rmmissing( CDBF.TRAJ(i, 1:end-1, 1) );
 traj_y = rmmissing( CDBF.TRAJ(i, 1:end-1, 2) );
-plot(traj_x, traj_y, Color=color3, DisplayName='CDBF')
+plot(traj_x, traj_y, Color='#EDB120', DisplayName='CDBF')
 
 
 for i = 1:num
@@ -61,17 +53,17 @@ for i = 1:num
     % Adaptive MPC
     traj_x = rmmissing( AMPC.TRAJ(i, :, 1) );
     traj_y = rmmissing( AMPC.TRAJ(i, :, 2) );
-    plot(traj_x, traj_y, Color=color2, HandleVisibility='off')
+    plot(traj_x, traj_y, Color='#D95319', HandleVisibility='off')
 
     % Adaptive MPC + CDBF
     traj_x = rmmissing( CDBF.TRAJ(i, 1:end-1, 1) );
     traj_y = rmmissing( CDBF.TRAJ(i, 1:end-1, 2) );
-    plot(traj_x, traj_y, Color=color3, HandleVisibility='off')
+    plot(traj_x, traj_y, Color='#EDB120', HandleVisibility='off')
 
     % Adaptive PSC (Proposed)
     traj_x = rmmissing( APSC.TRAJ(i, 1:end-1, 1) );
     traj_y = rmmissing( APSC.TRAJ(i, 1:end-1, 2) );
-    plot(traj_x, traj_y, Color=color1, HandleVisibility='off')
+    plot(traj_x, traj_y, Color='#0072BD', HandleVisibility='off')
 end
 
 t = 0:0.1:1;
@@ -92,7 +84,7 @@ legend(Location="northwest")
 set(gca, 'FontSize', 14);      % axes tick labels
 % saveas(f,'fig_trajectory','epsc')
 % saveas(f,'fig_trajectory','png')
-saveas(f,'fig_trajectory_H10','epsc')
-saveas(f,'fig_trajectory_H10','png')
-% saveas(f,'fig_trajectory_H20','epsc')
-% saveas(f,'fig_trajectory_H20','png')
+% saveas(f,'fig_trajectory_H10','epsc')
+% saveas(f,'fig_trajectory_H10','png')
+saveas(f,'fig_trajectory_H20','epsc')
+saveas(f,'fig_trajectory_H20','png')
