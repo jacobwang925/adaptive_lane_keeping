@@ -65,6 +65,7 @@ For more details on Simulink implementation, see [docs/model_overview.md](docs/m
 - Model Predictive Control Toolbox  
 - Optimization Toolbox  
 - Parallel Computing Toolbox (for `main_parallel_runs.m`)  
+- MATLAB Coder (for code generation)
 
 ---
 

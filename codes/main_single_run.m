@@ -95,6 +95,20 @@ if code_gen
 end
 
 
+%% LLM-inferred safety barrier function (optional)
+phi_expr = '1 - (e/emax)^2';
+try
+    user_input = "Normal driving on a dry road";
+    S = llm_inferring(user_input);
+    if isfield(S, 'phi_expr') && ~isempty(S.phi_expr)
+        phi_expr = S.phi_expr;
+    end
+catch
+    fprintf('LLM not available, using default barrier function.\n');
+end
+set_phi_expr(phi_expr);
+fprintf('Using barrier function: phi = %s\n', phi_expr);
+
 %% Closed-loop simulation
 disp('--- start simulation ----')
 
