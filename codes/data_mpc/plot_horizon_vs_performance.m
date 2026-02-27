@@ -52,7 +52,7 @@ hold on
 x = [5, 10, 15, 20, 25, 30];
 
 plot(x, APSC_res, '-o', DisplayName='Proposed')
-plot(x, AMPC_res, '-o', DisplayName='Adaptive MPC')
+plot(x, AMPC_res, '-o', DisplayName='AMPC')
 plot(x, CDBF_res, '-o', DisplayName='CDBF')
 xlabel('Horizon')
 ylabel('Time [s]')
@@ -61,8 +61,11 @@ xlim([0 30])
 lgd = legend(Location="northwest");
 yline(0.2, 'k:', HandleVisibility='off');  
 hold off
+set(gca, 'FontSize', 14);      % axes tick labels
 saveas(f,'fig_horizon_vs_time','epsc')
 saveas(f,'fig_horizon_vs_time','png')
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Safeprob
@@ -82,7 +85,7 @@ end
 hold on
 x = [5, 10, 15, 20, 25, 30];
 plot(x, APSC_res, '-o', DisplayName='Proposed')
-plot(x, AMPC_res, '-o', DisplayName='Adaptive MPC')
+plot(x, AMPC_res, '-o', DisplayName='AMPC')
 plot(x, CDBF_res, '-o', DisplayName='CDBF')
 xlabel('Horizon')
 ylabel('Safety Probability')
@@ -91,5 +94,6 @@ yline(0.9, 'k:', HandleVisibility='off');
 lgd = legend(Location="northwest");
 lgd.Position(2) = lgd.Position(2) -0.25;
 hold off
+set(gca, 'FontSize', 14);      % axes tick labels
 saveas(f,'fig_horizon_vs_safeprob','epsc')
 saveas(f,'fig_horizon_vs_safeprob','png')

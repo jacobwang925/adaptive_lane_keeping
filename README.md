@@ -37,25 +37,30 @@ The performance of these controllers is compared in terms of **computation time*
 ├─ codes/
 │  ├─ mdl_closed_loop_mpc.slx     ← Main Simulink model
 │  ├─ main_single_run.m           ← Run one scenario (quick test)
-│  ├─ main_parallel_runs.m        ← Run multiple Monte Carlo simulations
+│  ├─ main_parallel_runs.m        ← Run multiple parallel simulations
+│  ├─ param_sweep_parallel.m      ← Run massive parallel ablation simulations
 │  ├─ impl_controller/            ← MPC, PSC, CDBF implementations
 │  ├─ impl_estimator/             ← Friction coefficient estimator
 │  ├─ impl_model/                 ← Vehicle and dynamics models
 │  ├─ impl_road/                  ← Road description
 │  ├─ fun_*                       ← System dynamics, inequality constraints, etc.
 │  ├─ mfun_*                      ← Imprementations of MATLAB Functions in Simulink model
-│  └─ data_mpc/                   ← Simulation results (saved .mat files)
-└─ docs/                          ← Figures, notes
+│  └─ data_mpc/                   ← Simulation results (saved .mat files) and plotting scripts
+│       └─ figs_mpc/              ← Ablation trajectory visualizations and statistics
+├─  docs/                         ← Simulink Documentations
+└─  LLM/
+   ├─ llm_results/                ← Ablation results
+   └─ user_inputs/                ← User commands
+  
 ```
 
 For more details on Simulink implementation, see [docs/model_overview.md](docs/model_overview.md).
-
 
 ---
 
 ## 2. Requirements
 
-- MATLAB R2023b or later  
+- MATLAB R2025a — development environment (other versions may or may not be compatible)  
 - Simulink  
 - Model Predictive Control Toolbox  
 - Optimization Toolbox  
@@ -77,7 +82,7 @@ run('main_single_run.m')
 - Visualization can be turned on/off inside the script:
     ```matlab
     set_param([mdl '/visualization'],'Commented','off') % 'on' to disable
-    ```   
+    ```
 - For quick checks, the number of Monte Carlo samples for safety probability is initially set to `1`:
     ```matlab
     set_param([mdl '/SafeProbabilityMC'],'snum','1') % change to 100 for reproduction
@@ -152,7 +157,6 @@ set_param([mdl '/mes_var'], 'Value', '0.1')                  % Measurement noise
 - The prior mean/variance can be adjusted depending on the scenario.
 - `mes_var` controls the assumed measurement noise variance used in the estimator.
 
-
 ---
 
 ## 6. Outputs
@@ -172,5 +176,99 @@ These are stored in `.mat` files such as:
 data_mpc/data_AMPC_multi_icy_H10.mat
 data_mpc/data_CDBF_multi_icy_H10.mat
 data_mpc/data_APSC_multi_icy_H10.mat
+```
+
+## 
+
+## 7. Parameter ablation runs
+
+To reproduce the ablation experiments and trade-off visualizations:
+
+```
+cd codes
+run('param_sweep_parallel.m')
+```
+
+- This script performs **massive parameter sweeps** (different friction ranges, estimator settings, and controller types).
+
+- It will **take a long time** — approximately **2 days on a workstation with 20 CPU cores**.
+
+- Results are automatically stored under:
+
+  ```
+  codes/data_mpc/
+  ```
+
+After the sweep completes:
+
+1. **Visualize all trajectories and summary statistics:**
+
+   ```
+   run('data_mpc/plot_trajectories_all.m')
+   ```
+
+   This generates aggregated trajectory plots and performance metrics inside `data_mpc/figs_mpc/`.
+
+2. **Reproduce the safety–efficiency trade-off plot:**
+
+   ```
+   run('data_mpc/tradeoff_plot.m')
+   ```
+
+   This script recreates the final trade-off figures used in the paper or documentation.
+
+## 8. LLM Ablation Experiments
+
+To reproduce the ablation experiments reported in the tables,
+```
+cd codes
+run('run_llm_ablation_control.m')
+```
+This script evaluates how different LLMs infer control-related safety parameters from natural-language user inputs, and how these inferred parameters alter the closed-loop lane-keeping performance across multiple controllers.
+  - **Run 1** uses the *aggressive* user input  
+  - **Run 2** uses the *conservative* user input (and receives feedback from Run 1)
+
+```
+cd codes
+run('run_llm_ablation_estimator.m')
+```
+
+This script evaluates how LLMs infer control-related safety parameters when the same user input is used for both runs.
+  - **Run 1** use *dry and unsure* user input
+  - **Run 2** use *dry and unsure* user input (and receives feedback from Run 1)
+
+All result files are saved to:
+  ```
+  LLM/llm_results
+  ```
+To visualize the results:
+```
+cd codes
+run('show_result_control.m')
+```
+and
+```
+cd codes
+run('show_result_estimator.m')
+```
+Please ensure you provide your own API keys in the code before execution.
+Matlab add-on Large Language Models (LLMs) with MATLAB is required (https://www.mathworks.com/matlabcentral/fileexchange/163796-large-language-models-llms-with-matlab).
+
+### LLMs evaluated
+- GPT-4o-mini  
+- GPT-3.5-Turbo  
+- Gemini-2.5-Flash  
+- Gemini-2.0-Flash  
+- DeepSeek-Chat
+
+## Citation
+
+```
+@article{wang2025online,
+  title={Online Adaptive Probabilistic Safety Certificate with Language Guidance},
+  author={Wang, Zhuoyuan and Deng, Xiyu and Hoshino, Hikaru and Nakahira, Yorie},
+  journal={arXiv preprint arXiv:2511.12431},
+  year={2025}
+}
 ```
 

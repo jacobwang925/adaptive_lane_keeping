@@ -20,17 +20,21 @@ set_param([mdl '/estimate_fixed'], 'Value',  '[0.30, 0.01]')
 set_param([mdl '/prior'],'InitialCondition', '[0.30, 0.01]')
 set_param([mdl '/mes_var'], 'Value', '0.1')
 
+EMAX = 15;
+% Lane error tolerance
+set_param([mdl '/SafeProbabilityMC'],'emax',num2str(EMAX)) % default is 5
+
 % Num MC sims for safety probability calculation
-set_param([mdl '/SafeProbabilityMC'],'snum','1') % change to 100 for reproduction
+set_param([mdl '/SafeProbabilityMC'],'snum','100') % change to 100 for reproduction
 
 % Visulization
 set_param([mdl '/visualization'],'Commented','off') % 'on' to disable
 
 % Termination condition
-TERM_DIST = '300'; 
+TERM_DIST = '150'; 
 set_param([mdl '/termination_dist'], 'Value', TERM_DIST)
 
-TERM_LAT_ERROR  = '300';
+TERM_LAT_ERROR  = '100';
 set_param([mdl '/termination_lat'], 'Value', TERM_LAT_ERROR)
 
 % Initial state
@@ -57,8 +61,13 @@ nlobj.Model.NumberOfParameters = 2;
 nlobj.Weights.OutputVariables = [0.03 1 1]; % [Vx,e,psi] 
 nlobj.Weights.ManipulatedVariablesRate = [1 1];
 %%% constraint
+<<<<<<< HEAD
+%nlobj.Optimization.CustomIneqConFcn = []; % AMPC
+nlobj.Optimization.CustomIneqConFcn = "fun_inequality"; % PSC (Proposed)
+=======
 %nlobj.Optimization.CustomIneqConFcn = [];
 %nlobj.Optimization.CustomIneqConFcn = "fun_inequality"; % PSC (Proposed)
+>>>>>>> origin/main
 %nlobj.Optimization.CustomIneqConFcn = "fun_inequality_CDBF"; % CDBF
 nlobj.Optimization.CustomIneqConFcn = "fun_inequality_direct_lane_keep"; % Direct use of Lane keep condition
 %nlobj.Optimization.CustomIneqConFcn = @myIneqConFunction; % defined below
@@ -96,7 +105,7 @@ end
 disp('--- start simulation ----')
 
 % Friction coefficient
-mu = 0.2;
+mu = 0.3;
 set_param([mdl '/true_friction_coeff'],'Value', num2str(mu) )
 
 res = sim([mdl '.slx']);

@@ -131,8 +131,8 @@ for i = 1:num_sims
     STATE( i, 1:len, :) = state.Data;
     ETIME( i, 1:len) = etime.Data;
 end
-%save 'data_mpc/data_AMPC_multi_icy_H10' MU PROB SPEED TRAJ STATE ETIME
-%save 'data_mpc/data_CDBF_multi_icy_H10' MU PROB SPEED TRAJ STATE ETIME
-%save 'data_mpc/data_APSC_multi_icy_H10' MU PROB SPEED TRAJ STATE ETIME
+% save 'data_mpc/data_AMPC_multi_icy_H10' MU PROB SPEED TRAJ STATE ETIME
+% save 'data_mpc/data_CDBF_multi_icy_H10' MU PROB SPEED TRAJ STATE ETIME
+% save 'data_mpc/data_APSC_multi_icy_H10' MU PROB SPEED TRAJ STATE ETIME
 
 save_system(mdl,[],'OverwriteIfChangedOnDisk',true)
