@@ -232,7 +232,7 @@ This script evaluates how different LLMs infer control-related safety parameters
 cd codes
 run('run_llm_ablation_estimator.m')
 ```
- 
+
 This script evaluates how LLMs infer control-related safety parameters when the same user input is used for both runs.
   - **Run 1** use *dry and unsure* user input
   - **Run 2** use *dry and unsure* user input (and receives feedback from Run 1)
@@ -260,3 +260,15 @@ Matlab add-on Large Language Models (LLMs) with MATLAB is required (https://www.
 - Gemini-2.5-Flash  
 - Gemini-2.0-Flash  
 - DeepSeek-Chat
+
+## Citation
+
+```
+@article{wang2025online,
+  title={Online Adaptive Probabilistic Safety Certificate with Language Guidance},
+  author={Wang, Zhuoyuan and Deng, Xiyu and Hoshino, Hikaru and Nakahira, Yorie},
+  journal={arXiv preprint arXiv:2511.12431},
+  year={2025}
+}
+```
+
