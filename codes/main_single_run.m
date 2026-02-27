@@ -51,7 +51,7 @@ disp('--- defining MPC controller ----')
 % dimensions
 nlobj = nlmpc(12,3,2);    
 nlobj.Ts = 0.2;
-nlobj.PredictionHorizon = 10;
+nlobj.PredictionHorizon = 30;
 nlobj.ControlHorizon = 2;
 % state equation and parameters
 nlobj.Model.StateFcn =  "fun_system_dynamics";
@@ -61,9 +61,15 @@ nlobj.Model.NumberOfParameters = 2;
 nlobj.Weights.OutputVariables = [0.03 1 1]; % [Vx,e,psi] 
 nlobj.Weights.ManipulatedVariablesRate = [1 1];
 %%% constraint
+<<<<<<< HEAD
 %nlobj.Optimization.CustomIneqConFcn = []; % AMPC
 nlobj.Optimization.CustomIneqConFcn = "fun_inequality"; % PSC (Proposed)
+=======
+%nlobj.Optimization.CustomIneqConFcn = [];
+%nlobj.Optimization.CustomIneqConFcn = "fun_inequality"; % PSC (Proposed)
+>>>>>>> origin/main
 %nlobj.Optimization.CustomIneqConFcn = "fun_inequality_CDBF"; % CDBF
+nlobj.Optimization.CustomIneqConFcn = "fun_inequality_direct_lane_keep"; % Direct use of Lane keep condition
 %nlobj.Optimization.CustomIneqConFcn = @myIneqConFunction; % defined below
 
 % validation for codegeneration
