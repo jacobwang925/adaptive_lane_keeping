@@ -6,6 +6,10 @@ Official implementation of the paper ["Online Adaptive Probabilistic Safety Cert
 
 ![diagram](docs/diagram.png)
 
+
+
+<br>
+
 This repository provides Simulink-based **adaptive lane keeping simulations** with **model predictive control (MPC)**, and **LLM integration** for language instructions.  
 
 The online control framework includes:
@@ -226,7 +230,10 @@ After the sweep completes:
 
 ## 8. LLM Experiments
 
+![user_adaptation](docs/user_adaptation.png)
+
 To reproduce the experiment results reported in Table 1 and Table 2,
+
 ```
 cd codes
 run('run_llm_ablation_control.m')
