@@ -4,9 +4,11 @@
 
 Official implementation of the paper ["Online Adaptive Probabilistic Safety Certificate with Language Guidance"](https://arxiv.org/abs/2511.12431), accepted to the 8th Annual Learning for Dynamics & Control Conference (L4DC), 2026.
 
+<br>
+
 ![diagram](docs/diagram.png)
 
-
+<br>
 
 <br>
 
