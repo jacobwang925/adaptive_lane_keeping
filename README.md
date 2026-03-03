@@ -1,7 +1,14 @@
-# Adaptive Lane Keeping Simulation
+# Adaptive Lane Keeping
 
-This repository provides Simulink-based **adaptive lane keeping simulations** using **Model Predictive Control (MPC)**.  
-The framework includes:
+
+
+Official implementation of the paper ["Online Adaptive Probabilistic Safety Certificate with Language Guidance"](https://arxiv.org/abs/2511.12431), accepted to the 8th Annual Learning for Dynamics & Control Conference (L4DC), 2026.
+
+![diagram](docs/diagram.png)
+
+This repository provides Simulink-based **adaptive lane keeping simulations** with **model predictive control (MPC)**, and **LLM integration** for language instructions.  
+
+The online control framework includes:
 
 - **Adaptive MPC**: vehicle/road model is updated online using friction coefficient estimation.  
 - **Proposed**: Adaptive MPC with additional *Probabilistic Safety Certificate (PSC)* constraints.  
@@ -217,9 +224,9 @@ After the sweep completes:
 
    This script recreates the final trade-off figures used in the paper or documentation.
 
-## 8. LLM Ablation Experiments
+## 8. LLM Experiments
 
-To reproduce the ablation experiments reported in the tables,
+To reproduce the experiment results reported in Table 1 and Table 2,
 ```
 cd codes
 run('run_llm_ablation_control.m')
