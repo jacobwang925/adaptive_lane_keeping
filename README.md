@@ -234,7 +234,7 @@ After the sweep completes:
 
 ![user_adaptation](docs/user_adaptation.png)
 
-To reproduce the experiment results reported in Table 1 and Table 2,
+To reproduce the experiment results reported in Table 1 and Table 2:
 
 ```
 cd codes
