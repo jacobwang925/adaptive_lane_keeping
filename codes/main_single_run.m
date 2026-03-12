@@ -62,8 +62,9 @@ nlobj.Weights.OutputVariables = [0.03 1 1]; % [Vx,e,psi]
 nlobj.Weights.ManipulatedVariablesRate = [1 1];
 %%% constraint
 %nlobj.Optimization.CustomIneqConFcn = []; % AMPC
-nlobj.Optimization.CustomIneqConFcn = "fun_inequality"; % PSC (Proposed)
+% nlobj.Optimization.CustomIneqConFcn = "fun_inequality"; % PSC (Proposed)
 %nlobj.Optimization.CustomIneqConFcn = "fun_inequality_CDBF"; % CDBF
+nlobj.Optimization.CustomIneqConFcn = "fun_inequality_direct_lane_keep"; % Direct use of Lane keep condition
 %nlobj.Optimization.CustomIneqConFcn = @myIneqConFunction; % defined below
 
 % validation for codegeneration

@@ -1,7 +1,20 @@
-# Adaptive Lane Keeping Simulation
+# Adaptive Lane Keeping
 
-This repository provides Simulink-based **adaptive lane keeping simulations** using **Model Predictive Control (MPC)**.  
-The framework includes:
+
+
+Official implementation of the paper ["Online Adaptive Probabilistic Safety Certificate with Language Guidance"](https://arxiv.org/abs/2511.12431), accepted to the 8th Annual Learning for Dynamics & Control Conference (L4DC), 2026.
+
+<br>
+
+![diagram](docs/diagram.png)
+
+<br>
+
+<br>
+
+This repository provides Simulink-based **adaptive lane keeping simulations** with **model predictive control (MPC)**, and **LLM integration** for language instructions.  
+
+The online control framework includes:
 
 - **Adaptive MPC**: vehicle/road model is updated online using friction coefficient estimation.  
 - **Proposed**: Adaptive MPC with additional *Probabilistic Safety Certificate (PSC)* constraints.  
@@ -218,9 +231,12 @@ After the sweep completes:
 
    This script recreates the final trade-off figures used in the paper or documentation.
 
-## 8. LLM Ablation Experiments
+## 8. LLM Experiments
 
-To reproduce the ablation experiments reported in the tables,
+![user_adaptation](docs/user_adaptation.png)
+
+To reproduce the experiment results reported in Table 1 and Table 2:
+
 ```
 cd codes
 run('run_llm_ablation_control.m')
@@ -233,7 +249,7 @@ This script evaluates how different LLMs infer control-related safety parameters
 cd codes
 run('run_llm_ablation_estimator.m')
 ```
- 
+
 This script evaluates how LLMs infer control-related safety parameters when the same user input is used for both runs.
   - **Run 1** use *dry and unsure* user input
   - **Run 2** use *dry and unsure* user input (and receives feedback from Run 1)
@@ -261,3 +277,15 @@ Matlab add-on Large Language Models (LLMs) with MATLAB is required (https://www.
 - Gemini-2.5-Flash  
 - Gemini-2.0-Flash  
 - DeepSeek-Chat
+
+## Citation
+
+```
+@article{wang2025online,
+  title={Online Adaptive Probabilistic Safety Certificate with Language Guidance},
+  author={Wang, Zhuoyuan and Deng, Xiyu and Hoshino, Hikaru and Nakahira, Yorie},
+  journal={arXiv preprint arXiv:2511.12431},
+  year={2025}
+}
+```
+
