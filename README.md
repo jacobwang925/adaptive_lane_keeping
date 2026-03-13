@@ -51,6 +51,7 @@ The performance of these controllers is compared in terms of **computation time*
 │  ├─ mdl_closed_loop_mpc.slx     ← Main Simulink model
 │  ├─ main_single_run.m           ← Run one scenario (quick test)
 │  ├─ main_parallel_runs.m        ← Run multiple parallel simulations
+│  ├─ compare_phi_expressions.m   ← Compare different barrier function shapes
 │  ├─ param_sweep_parallel.m      ← Run massive parallel ablation simulations
 │  ├─ impl_controller/            ← MPC, PSC, CDBF implementations
 │  ├─ impl_estimator/             ← Friction coefficient estimator
@@ -78,7 +79,6 @@ For more details on Simulink implementation, see [docs/model_overview.md](docs/m
 - Model Predictive Control Toolbox  
 - Optimization Toolbox  
 - Parallel Computing Toolbox (for `main_parallel_runs.m`)  
-- MATLAB Coder (for code generation)
 
 ---
 
@@ -173,7 +173,75 @@ set_param([mdl '/mes_var'], 'Value', '0.1')                  % Measurement noise
 
 ---
 
-## 6. Outputs
+## 6. Barrier Function (Phi) Expression Comparison
+
+A key feature of this repository is the ability to compare different **barrier function shapes** (phi expressions) and their impact on safety performance. This is particularly relevant when using the **PSC (Proposed)** safety method.
+
+### Quick Start: Compare Phi Expressions
+
+```matlab
+cd codes
+run('compare_phi_expressions.m')
+```
+
+This script compares 4 different barrier function formulations side-by-side:
+- **Quadratic** (default): `1 - (e/emax)^2`
+- **Quartic**: `1 - (e/emax)^4` - flatter near center, steeper near boundary
+- **Cosine**: `cos(pi*e/(2*emax))` - very smooth at boundary
+- **Linear**: `1 - abs(e/emax)` - constant slope
+
+### Important: Safety Methods and Phi Expressions
+
+**Phi expressions ONLY affect the simulation when using `SAFETY_METHOD = 'PSC'`!**
+
+| Safety Method | Uses Phi? | Description |
+|---------------|-----------|-------------|
+| **PSC** | ✅ **YES** | Uses `fun_safety_condition()` with your phi expression in Monte Carlo simulations to calculate safety probability and Lie derivatives |
+| **CDBF** | ❌ NO | Uses vehicle dynamics directly, ignores phi |
+| **DIRECT** | ❌ NO | Uses hardcoded constraint, ignores phi |
+| **AMPC** | ❌ NO | No safety constraints, ignores phi |
+
+### Customizing the Comparison
+
+Edit `compare_phi_expressions.m` to test your own expressions:
+
+```matlab
+% Line 23-28: Define your own phi expressions
+phi_list = {
+    '1 - (e/emax)^2',          'my quadratic';
+    'exp(-(e/emax)^2)',        'gaussian';      % Add your own!
+    'your_expression_here',    'custom name';
+};
+
+% Line 41: Change safety method (but remember: only PSC uses phi!)
+SAFETY_METHOD = 'PSC';  % 'PSC', 'CDBF', 'DIRECT', or 'NONE'
+
+% Line 43: Adjust simulation parameters
+EMAX = 3;        % Lane error tolerance [m]
+MU_VALUE = 0.3;  % Friction coefficient (0.3=icy, 0.9=dry)
+```
+
+### Using Custom Phi Expressions in Single Runs
+
+```matlab
+% Run with custom phi expression and PSC method
+results = main_single_run('cos(pi*e/(2*emax))', 5, 'PSC', 0.3);
+
+% Arguments: phi_expr, emax, safety_method, mu_value
+```
+
+### Understanding the Results
+
+Different phi expressions affect:
+- **Safety Probability** $p$ - likelihood of staying within lane bounds over the horizon
+- **Lie Derivatives** $L_fP$, $L_gP$ - how quickly safety probability changes with state and control
+- **Controller Conservatism** - steeper phi functions generally lead to more conservative behavior
+
+For detailed technical information, see [docs/model_overview.md](docs/model_overview.md).
+
+---
+
+## 7. Outputs
 
 Each run produces:
 
@@ -194,7 +262,7 @@ data_mpc/data_APSC_multi_icy_H10.mat
 
 ## 
 
-## 7. Parameter ablation runs
+## 8. Parameter ablation runs
 
 To reproduce the ablation experiments and trade-off visualizations:
 
@@ -231,7 +299,7 @@ After the sweep completes:
 
    This script recreates the final trade-off figures used in the paper or documentation.
 
-## 8. LLM Experiments
+## 9. LLM Experiments
 
 ![user_adaptation](docs/user_adaptation.png)
 
@@ -288,4 +356,3 @@ Matlab add-on Large Language Models (LLMs) with MATLAB is required (https://www.
   year={2025}
 }
 ```
-

@@ -1,11 +1,34 @@
 % Compare different barrier function (phi) expressions side-by-side
 %
-% Runs the closed-loop simulation once per expression, collects results,
+% Calls main_single_run.m for each expression, collects results,
 % and plots lane error, safety probability, and speed for comparison.
+%
+% IMPORTANT: The impact of phi expressions depends on the SAFETY_METHOD:
+%   - 'PSC' (Proposed): Phi expressions MATTER. The safety condition is used
+%     in Monte Carlo simulations to calculate safety probability (p, LfP, LgP, BP),
+%     which are then used in the PSC constraint.
+%   - 'CDBF': Phi expressions are IGNORED. Uses control-dependent barrier
+%     functions based on vehicle dynamics instead.
+%   - 'DIRECT': Phi expressions are IGNORED. Uses hardcoded lane error constraint.
+%   - 'NONE' (AMPC): Phi expressions are IGNORED. No safety constraints.
+%
+% For testing how different phi expressions impact safety scores, use 'PSC'.
 
 clear; close all;
 
 %% --- Define phi expressions to compare ---
+% Format: {'expression', 'display_name'; ...}
+% The expression will be substituted into fun_safety_condition.m
+%
+% Available variables in expression:
+%   e     - lateral error (state variable)
+%   emax  - maximum allowed error (set by EMAX parameter)
+%
+% Example expressions:
+%   '1 - (e/emax)^2'          - Quadratic (default), smooth, moderate
+%   '1 - (e/emax)^4'          - Quartic, flatter near center, steeper near boundary
+%   'cos(pi*e/(2*emax))'      - Cosine, very smooth at boundary
+%   '1 - abs(e/emax)'         - Linear, constant slope, sharp corner at e=0
 phi_list = {
     '1 - (e/emax)^2',          'quadratic (default)';
     '1 - (e/emax)^4',          'quartic';
@@ -16,98 +39,35 @@ phi_list = {
 N = size(phi_list, 1);
 colors = lines(N);
 
-%% --- Setup (shared across all runs) ---
+%% --- Setup paths ---
 addpath impl_controller impl_model impl_estimator impl_road
 
-mdl = 'mdl_closed_loop_mpc';
-load_system(mdl)
-
-ONLINE_ESTIMATION = '1';
-set_param([mdl '/estimation_sw'],'sw', ONLINE_ESTIMATION)
-set_param([mdl '/estimate_fixed'], 'Value',  '[0.30, 0.01]')
-set_param([mdl '/prior'],'InitialCondition', '[0.30, 0.01]')
-set_param([mdl '/mes_var'], 'Value', '0.1')
-
-EMAX = 3;
-set_param([mdl '/SafeProbabilityMC'],'emax',num2str(EMAX))
-set_param([mdl '/SafeProbabilityMC'],'snum','100')
-set_param([mdl '/visualization'],'Commented','on')
-
-TERM_DIST = '150';
-set_param([mdl '/termination_dist'], 'Value', TERM_DIST)
-TERM_LAT_ERROR = '100';
-set_param([mdl '/termination_lat'], 'Value', TERM_LAT_ERROR)
-
-V0 = 20 * 1000/3600;
-Re = 0.325;
-INIT_DYN  = [V0, 0, 0, 0];
-INIT_OMG  = V0/Re*ones(1,4);
-INIT_ROAD = [0,0,0];
-init = [INIT_DYN  INIT_OMG 0 INIT_ROAD];
-set_param([mdl '/initial_vehicle_state'],'Value', ['[' num2str(init) ']'] )
-
-%% MPC controller (built once, reused for all runs)
-disp('--- defining MPC controller ----')
-nlobj = nlmpc(12,3,2);
-nlobj.Ts = 0.2;
-nlobj.PredictionHorizon = 10;
-nlobj.ControlHorizon = 2;
-nlobj.Model.StateFcn  = "fun_system_dynamics";
-nlobj.Model.OutputFcn = "fun_output_function";
-nlobj.Model.NumberOfParameters = 2;
-nlobj.Weights.OutputVariables = [0.03 1 1];
-nlobj.Weights.ManipulatedVariablesRate = [1 1];
-nlobj.Optimization.CustomIneqConFcn = "fun_inequality";
-
-u0 = [0 0];
-ref0 = [40*1000/3600 0 0];
-mu = 0.9;
-probs = [1, 0, 1, 1, 0];
-validateFcns(nlobj,init,u0,{},{mu,probs},ref0);
-nloptions = nlmpcmoveopt;
-nloptions.Parameters = {mu, probs};
-mv = u0; xk = init;
-[mv,nloptions] = nlmpcmove(nlobj,xk,mv,ref0,[],nloptions);
-
-code_gen = true;
-[coreData,onlineData] = getCodeGenerationData(nlobj,xk',mv,nloptions.Parameters);
-if code_gen
-    disp('--- building MPC controller ----')
-    Cfg = coder.config('mex');
-    Cfg.EnableDynamicMemoryAllocation = true;
-    Cfg.DynamicMemoryAllocationThreshold = 65536;
-    codegen('-config',Cfg,'nlmpcmoveCodeGeneration','-o','fun_mpc_controller','-args',...
-        {coder.Constant(coreData), xk', mv, onlineData});
-end
+%% --- Common parameters for all runs ---
+EMAX = 3;                          % Lane error tolerance [m]
+SAFETY_METHOD = 'PSC';             % SAFETY METHOD: 'PSC', 'CDBF', 'DIRECT', or 'NONE'
+                                   % NOTE: Only 'PSC' uses phi expressions!
+MU_VALUE = 0.3;                    % Friction coefficient (0.3 = icy, 0.9 = dry)
 
 %% --- Run simulation for each phi expression ---
-mu = 0.3;
-set_param([mdl '/true_friction_coeff'],'Value', num2str(mu))
-
 results = cell(N, 1);
+
 for k = 1:N
     fprintf('\n=== Run %d/%d: %s  [phi = %s] ===\n', k, N, phi_list{k,2}, phi_list{k,1});
-    set_phi_expr(phi_list{k,1});
-    clear fun_safety_condition;
-    rehash;
-    pctRunOnAll('clear fun_safety_condition; rehash;');
 
-    % Verify the file was actually rewritten
-    verify_txt = fileread(which('fun_safety_condition'));
-    phi_line = extractBetween(verify_txt, 'phi =', '%#PHI_EXPR');
-    fprintf('  Verify file contents: phi =%s\n', strtrim(phi_line{1}));
+    % Call main_single_run with current phi expression
+    % Arguments: phi_expr, emax, safety_method, mu_value
+    res = main_single_run(phi_list{k,1}, EMAX, SAFETY_METHOD, MU_VALUE);
 
-    res = sim([mdl '.slx']);
+    % Store results
+    results{k} = res;
+    results{k}.name = phi_list{k,2};
+    results{k}.expr = phi_list{k,1};
 
-    results{k}.prob  = renamevars(res.SafeProb.extractTimetable,    'Data','prob');
-    results{k}.state = renamevars(res.State.extractTimetable,       'Data','state');
-    results{k}.input = renamevars(res.Input.extractTimetable,       'Data','input');
-    results{k}.traj  = renamevars(res.Trajectory.extractTimetable,  'Data','traj');
-    results{k}.name  = phi_list{k,2};
-    results{k}.expr  = phi_list{k,1};
+    fprintf('  Completed: Max error = %.3f, Min prob = %.3f\n', ...
+        max(abs(res.state.state(:,11))), min(res.prob.prob));
 end
 
-% Restore default after all runs
+% Restore default phi expression after all runs
 set_phi_expr('1 - (e/emax)^2');
 disp('--- all runs completed ----')
 
@@ -121,7 +81,7 @@ for k = 1:N
         'Color', colors(k,:), 'LineWidth', 1.5);
 end
 ylabel('Lane Error e [m]');
-title('Barrier Function Comparison');
+title(sprintf('Barrier Function Comparison (Safety Method: %s)', SAFETY_METHOD));
 legend(phi_list(:,2), 'Location','best');
 
 % 2) Safety probability
