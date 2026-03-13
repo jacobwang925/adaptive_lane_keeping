@@ -126,18 +126,22 @@ run('main_parallel_runs.m')
 
 ## 4. Switching controllers
 
-In both main scripts, you can choose the controller by enabling the corresponding inequality function:
+In `main_single_run.m`, the controller is selected via the `safety_method` parameter:
 
 ```matlab
-% Proposed (Adaptive MPC + PSC)
-nlobj.Optimization.CustomIneqConFcn = "fun_inequality";
+% Standalone: edit the default on line 69
+safety_method = 'DIRECT';  % 'PSC', 'CDBF', 'DIRECT', or 'NONE'
 
-% CDBF
-nlobj.Optimization.CustomIneqConFcn = "fun_inequality_CDBF";
-
-% Adaptive MPC (no safety constraints)
-nlobj.Optimization.CustomIneqConFcn = [];
+% Function call: pass as third argument
+results = main_single_run(phi_expr, emax, 'PSC', mu_value);
 ```
+
+| Method | Constraint Function | Description |
+|--------|-------------------|-------------|
+| `'PSC'` | `fun_inequality` | Adaptive MPC + Probabilistic Safety Certificate |
+| `'CDBF'` | `fun_inequality_CDBF` | Adaptive MPC + Control-Dependent Barrier Function |
+| `'DIRECT'` | `fun_inequality_direct_lane_keep` | Direct lane keeping constraint using `fun_safety_condition()` |
+| `'NONE'` | *(none)* | Adaptive MPC without safety constraints |
 
 ### Note on code generation
 
@@ -192,13 +196,11 @@ This script compares 4 different barrier function formulations side-by-side:
 
 ### Important: Safety Methods and Phi Expressions
 
-**Phi expressions ONLY affect the simulation when using `SAFETY_METHOD = 'PSC'`!**
-
-| Safety Method | Uses Phi? | Description |
+| Safety Method | Phi Shape Matters? | Description |
 |---------------|-----------|-------------|
-| **PSC** | ✅ **YES** | Uses `fun_safety_condition()` with your phi expression in Monte Carlo simulations to calculate safety probability and Lie derivatives |
+| **DIRECT** | ✅ **YES** | Enforces `phi(e) >= 0` directly in the MPC constraint via `fun_safety_condition()`. Different phi shapes produce different controller behavior. |
+| **PSC** | ❌ Effectively NO | Uses `fun_safety_condition()` in Monte Carlo simulations, but only checks the **sign** of phi (safe/unsafe). Since all standard expressions cross zero at `|e| = emax`, the shape has no effect on the probability or Lie derivatives. |
 | **CDBF** | ❌ NO | Uses vehicle dynamics directly, ignores phi |
-| **DIRECT** | ❌ NO | Uses hardcoded constraint, ignores phi |
 | **AMPC** | ❌ NO | No safety constraints, ignores phi |
 
 ### Customizing the Comparison
@@ -206,26 +208,28 @@ This script compares 4 different barrier function formulations side-by-side:
 Edit `compare_phi_expressions.m` to test your own expressions:
 
 ```matlab
-% Line 23-28: Define your own phi expressions
+% Define your own phi expressions
 phi_list = {
     '1 - (e/emax)^2',          'my quadratic';
     'exp(-(e/emax)^2)',        'gaussian';      % Add your own!
     'your_expression_here',    'custom name';
 };
 
-% Line 41: Change safety method (but remember: only PSC uses phi!)
-SAFETY_METHOD = 'PSC';  % 'PSC', 'CDBF', 'DIRECT', or 'NONE'
+% Change safety method (use DIRECT for phi shape comparison)
+SAFETY_METHOD = 'DIRECT';  % 'PSC', 'CDBF', 'DIRECT', or 'NONE'
 
-% Line 43: Adjust simulation parameters
+% Adjust simulation parameters
 EMAX = 3;        % Lane error tolerance [m]
 MU_VALUE = 0.3;  % Friction coefficient (0.3=icy, 0.9=dry)
 ```
 
+> **Note:** Non-smooth expressions (e.g. `abs()`) or expressions with steep gradients near the boundary (e.g. cosine) may cause the MPC solver to diverge. Prefer smooth expressions like quadratic or quartic for stable results.
+
 ### Using Custom Phi Expressions in Single Runs
 
 ```matlab
-% Run with custom phi expression and PSC method
-results = main_single_run('cos(pi*e/(2*emax))', 5, 'PSC', 0.3);
+% Run with custom phi expression and DIRECT method
+results = main_single_run('1 - (e/emax)^4', 3, 'DIRECT', 0.3);
 
 % Arguments: phi_expr, emax, safety_method, mu_value
 ```

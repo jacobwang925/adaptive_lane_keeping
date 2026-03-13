@@ -146,6 +146,17 @@ function results = main_single_run(phi_expr, emax, safety_method, mu_value)
     nlobj.Weights.OutputVariables = [0.03 1 1]; % [Vx,e,psi]
     nlobj.Weights.ManipulatedVariablesRate = [1 1];
 
+    %% Set phi expression and emax config (must happen before validation & codegen)
+    set_phi_expr(phi_expr);
+    fprintf('Using barrier function: phi = %s\n', phi_expr);
+
+    fid = fopen(fullfile(fileparts(mfilename('fullpath')), 'get_emax_config.m'), 'w');
+    fprintf(fid, 'function val = get_emax_config()\n    val = %g;\nend\n', emax);
+    fclose(fid);
+
+    clear fun_safety_condition get_emax_config;
+    rehash;
+
     %%% constraint - select based on safety_method
     switch upper(safety_method)
         case 'PSC'
@@ -159,7 +170,7 @@ function results = main_single_run(phi_expr, emax, safety_method, mu_value)
         case 'DIRECT'
             nlobj.Optimization.CustomIneqConFcn = "fun_inequality_direct_lane_keep";
             disp('Using DIRECT safety method');
-            fprintf('  -> phi expressions will be IGNORED\n');
+            fprintf('  -> phi expressions WILL affect results\n');
         case 'NONE'
             nlobj.Optimization.CustomIneqConFcn = [];
             disp('Using AMPC (no safety constraints)');
@@ -195,17 +206,16 @@ function results = main_single_run(phi_expr, emax, safety_method, mu_value)
             {coder.Constant(coreData), xk', mv, onlineData});
     end
 
-    %% Set phi expression
-    set_phi_expr(phi_expr);
-    fprintf('Using barrier function: phi = %s\n', phi_expr);
-    clear fun_safety_condition;
-    rehash;
-
     %% Closed-loop simulation
     disp('--- start simulation ----')
 
     % Friction coefficient
     set_param([mdl '/true_friction_coeff'],'Value', num2str(mu_value) )
+
+    % Simulink MATLAB Function blocks read from the base workspace,
+    % but when this runs as a function the variables are local.
+    assignin('base', 'coreData',   coreData);
+    assignin('base', 'onlineData', onlineData);
 
     res = sim([mdl '.slx']);
 

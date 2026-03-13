@@ -44,8 +44,7 @@ addpath impl_controller impl_model impl_estimator impl_road
 
 %% --- Common parameters for all runs ---
 EMAX = 3;                          % Lane error tolerance [m]
-SAFETY_METHOD = 'PSC';             % SAFETY METHOD: 'PSC', 'CDBF', 'DIRECT', or 'NONE'
-                                   % NOTE: Only 'PSC' uses phi expressions!
+SAFETY_METHOD = 'DIRECT';          % SAFETY METHOD: 'PSC', 'CDBF', 'DIRECT', or 'NONE'
 MU_VALUE = 0.3;                    % Friction coefficient (0.3 = icy, 0.9 = dry)
 
 %% --- Run simulation for each phi expression ---
