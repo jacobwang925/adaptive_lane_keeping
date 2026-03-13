@@ -4,15 +4,21 @@
 % and plots lane error, safety probability, and speed for comparison.
 %
 % IMPORTANT: The impact of phi expressions depends on the SAFETY_METHOD:
-%   - 'PSC' (Proposed): Phi expressions MATTER. The safety condition is used
-%     in Monte Carlo simulations to calculate safety probability (p, LfP, LgP, BP),
-%     which are then used in the PSC constraint.
+%   - 'DIRECT': Phi expressions MATTER. The MPC optimizer directly enforces
+%     phi(e) >= 0, so the shape of phi affects the constraint gradient and
+%     controller behavior. Use smooth, differentiable expressions only.
+%   - 'PSC' (Proposed): Phi expressions have NO EFFECT in practice. The Monte
+%     Carlo simulation only checks the sign of phi (phi < 0 = unsafe), and all
+%     standard expressions cross zero at the same boundary (|e| = emax), so
+%     p, LfP, LgP, and BP are identical regardless of phi shape.
 %   - 'CDBF': Phi expressions are IGNORED. Uses control-dependent barrier
 %     functions based on vehicle dynamics instead.
-%   - 'DIRECT': Phi expressions are IGNORED. Uses hardcoded lane error constraint.
 %   - 'NONE' (AMPC): Phi expressions are IGNORED. No safety constraints.
 %
-% For testing how different phi expressions impact safety scores, use 'PSC'.
+% NOTE on expression stability with DIRECT:
+%   Non-smooth expressions (e.g. abs()) or those with steep gradients near the
+%   boundary (e.g. cosine) can cause the gradient-based MPC solver to diverge.
+%   Prefer smooth expressions like quadratic or quartic for stable results.
 
 clear; close all;
 
@@ -24,11 +30,12 @@ clear; close all;
 %   e     - lateral error (state variable)
 %   emax  - maximum allowed error (set by EMAX parameter)
 %
-% Example expressions:
-%   '1 - (e/emax)^2'          - Quadratic (default), smooth, moderate
+% Example expressions (must be smooth and differentiable for DIRECT method):
+%   '1 - (e/emax)^2'          - Quadratic (default), smooth, moderate gradient
 %   '1 - (e/emax)^4'          - Quartic, flatter near center, steeper near boundary
-%   'cos(pi*e/(2*emax))'      - Cosine, very smooth at boundary
-%   '1 - abs(e/emax)'         - Linear, constant slope, sharp corner at e=0
+%   '1 - (e/emax)^6'          - Sextic, even more forgiving near center
+%   'cos(pi*e/(2*emax))'      - Cosine, smooth but steep gradient near boundary [may diverge]
+%   '1 - abs(e/emax)'         - Linear, NON-DIFFERENTIABLE at e=0, avoid with DIRECT
 phi_list = {
     '1 - (e/emax)^2',          'quadratic (default)';
     '1 - (e/emax)^4',          'quartic';
@@ -45,7 +52,7 @@ addpath impl_controller impl_model impl_estimator impl_road
 %% --- Common parameters for all runs ---
 EMAX = 3;                          % Lane error tolerance [m]
 SAFETY_METHOD = 'DIRECT';          % SAFETY METHOD: 'PSC', 'CDBF', 'DIRECT', or 'NONE'
-MU_VALUE = 0.3;                    % Friction coefficient (0.3 = icy, 0.9 = dry)
+MU_VALUE = 0.6;                    % Friction coefficient (0.3 = icy, 0.9 = dry)
 
 %% --- Run simulation for each phi expression ---
 results = cell(N, 1);
