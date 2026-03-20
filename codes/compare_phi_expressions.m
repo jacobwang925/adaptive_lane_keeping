@@ -51,41 +51,16 @@ addpath impl_controller impl_model impl_estimator impl_road
 
 %% --- Common parameters for all runs ---
 EMAX = 3;                          % Lane error tolerance [m]
-SAFETY_METHOD = 'PSC';          % SAFETY METHOD: 'PSC', 'CDBF', 'DIRECT', or 'NONE'
+SAFETY_METHODS = {'PSC', 'CDBF', 'DIRECT', 'NONE'};
 MU_VALUE = 0.3;                    % Friction coefficient (0.3 = icy, 0.9 = dry)
 
-%% --- Run simulation for each phi expression ---
-results = cell(N, 1);
+M = numel(SAFETY_METHODS);
 
-for k = 1:N
-    fprintf('\n=== Run %d/%d: %s  [phi = %s] ===\n', k, N, phi_list{k,2}, phi_list{k,1});
-
-    % Call main_single_run with current phi expression
-    % Arguments: phi_expr, emax, safety_method, mu_value
-    res = main_single_run(phi_list{k,1}, EMAX, SAFETY_METHOD, MU_VALUE);
-
-    % Store results
-    results{k} = res;
-    results{k}.name = phi_list{k,2};
-    results{k}.expr = phi_list{k,1};
-
-    fprintf('  Completed: Max error = %.3f, Min prob = %.3f\n', ...
-        max(abs(res.state.state(:,11))), min(res.prob.prob));
-end
-
-% Restore default phi expression after all runs
-set_phi_expr('1 - (e/emax)^2');
-disp('--- all runs completed ----')
-
-%% --- Plot comparison ---
-fig = figure('Color', 'w', 'Units', 'centimeters', 'Position', [2 2 18 18]);
-tl = tiledlayout(3, 1, 'TileSpacing', 'compact', 'Padding', 'compact');
-
+%% --- Plot styling constants ---
 TICK_FS  = 9;
 LABEL_FS = 10;
 TITLE_FS = 11;
 
-% Colorblind-friendly palette (Okabe-Ito inspired)
 clr = [0.000, 0.447, 0.741;   % blue
        0.850, 0.325, 0.098;   % vermillion
        0.494, 0.184, 0.557;   % purple
@@ -96,7 +71,6 @@ markers       = {'o', 's', 'd', '^'};
 mark_every    = 50;
 marker_offset = 12;
 
-% Build LaTeX legend labels: $\phi = expression$ (name)
 leg_labels = cell(N, 1);
 for k = 1:N
     leg_labels{k} = sprintf('$\\phi = %s$ (%s)', phi_list{k,1}, phi_list{k,2});
@@ -105,76 +79,108 @@ end
 ax_style = @(ax) set(ax, 'FontSize', TICK_FS, 'TickLabelInterpreter', 'latex', ...
     'TickDir', 'out', 'GridAlpha', 0.15, 'Box', 'on', 'LineWidth', 0.5);
 
-% (a) Lane error
-ax1 = nexttile(tl); hold(ax1, 'on'); grid(ax1, 'on');
-for k = 1:N
-    t = results{k}.state.Time;
-    midx = 1 + (k-1)*marker_offset : mark_every : numel(t);
-    plot(ax1, t, results{k}.state.state(:,11), ...
-        line_styles{mod(k-1,numel(line_styles))+1}, ...
-        'Color', clr(mod(k-1,size(clr,1))+1,:), 'LineWidth', 1.3, ...
-        'Marker', markers{mod(k-1,numel(markers))+1}, ...
-        'MarkerIndices', midx, 'MarkerSize', 4);
+%% --- Run all safety methods and plot each ---
+all_results = cell(M, 1);
+
+for m = 1:M
+    method = SAFETY_METHODS{m};
+    fprintf('\n########## SAFETY METHOD: %s (%d/%d) ##########\n', method, m, M);
+
+    results = cell(N, 1);
+    for k = 1:N
+        fprintf('\n=== Run %d/%d: %s  [phi = %s] ===\n', k, N, phi_list{k,2}, phi_list{k,1});
+
+        res = main_single_run(phi_list{k,1}, EMAX, method, MU_VALUE);
+
+        results{k} = res;
+        results{k}.name = phi_list{k,2};
+        results{k}.expr = phi_list{k,1};
+
+        fprintf('  Completed: Max error = %.3f, Min prob = %.3f\n', ...
+            max(abs(res.state.state(:,11))), min(res.prob.prob));
+    end
+
+    all_results{m} = results;
+
+    %% --- Plot comparison for this method ---
+    fig = figure('Color', 'w', 'Units', 'centimeters', 'Position', [2 2 18 18]);
+    tl = tiledlayout(3, 1, 'TileSpacing', 'compact', 'Padding', 'compact');
+
+    % (a) Lane error
+    ax1 = nexttile(tl); hold(ax1, 'on'); grid(ax1, 'on');
+    for k = 1:N
+        t = results{k}.state.Time;
+        midx = 1 + (k-1)*marker_offset : mark_every : numel(t);
+        plot(ax1, t, results{k}.state.state(:,11), ...
+            line_styles{mod(k-1,numel(line_styles))+1}, ...
+            'Color', clr(mod(k-1,size(clr,1))+1,:), 'LineWidth', 1.3, ...
+            'Marker', markers{mod(k-1,numel(markers))+1}, ...
+            'MarkerIndices', midx, 'MarkerSize', 4);
+    end
+    ylabel(ax1, 'Lateral Error $e$ [m]', 'Interpreter', 'latex', 'FontSize', LABEL_FS);
+    title(ax1, sprintf('(a) Lane Tracking Error (%s)', method), ...
+        'Interpreter', 'latex', 'FontSize', TITLE_FS);
+    ax_style(ax1);
+    set(ax1, 'XTickLabel', []);
+    lg1 = legend(ax1, leg_labels, 'Interpreter', 'latex', 'Location', 'best', ...
+        'FontSize', 8, 'Box', 'off');
+    lg1.ItemTokenSize = [20, 8];
+
+    % (b) Safety probability
+    ax2 = nexttile(tl); hold(ax2, 'on'); grid(ax2, 'on');
+    for k = 1:N
+        t = results{k}.prob.Time;
+        midx = 1 + (k-1)*marker_offset : mark_every : numel(t);
+        plot(ax2, t, results{k}.prob.prob, ...
+            line_styles{mod(k-1,numel(line_styles))+1}, ...
+            'Color', clr(mod(k-1,size(clr,1))+1,:), 'LineWidth', 1.3, ...
+            'Marker', markers{mod(k-1,numel(markers))+1}, ...
+            'MarkerIndices', midx, 'MarkerSize', 4);
+    end
+    ylabel(ax2, 'Safety Probability $P$', 'Interpreter', 'latex', 'FontSize', LABEL_FS);
+    title(ax2, '(b) Safety Probability', 'Interpreter', 'latex', 'FontSize', TITLE_FS);
+    ax_style(ax2);
+    set(ax2, 'XTickLabel', []);
+
+    % (c) Speed
+    ax3 = nexttile(tl); hold(ax3, 'on'); grid(ax3, 'on');
+    for k = 1:N
+        t = results{k}.state.Time;
+        midx = 1 + (k-1)*marker_offset : mark_every : numel(t);
+        plot(ax3, t, results{k}.state.state(:,1)*3.6, ...
+            line_styles{mod(k-1,numel(line_styles))+1}, ...
+            'Color', clr(mod(k-1,size(clr,1))+1,:), 'LineWidth', 1.3, ...
+            'Marker', markers{mod(k-1,numel(markers))+1}, ...
+            'MarkerIndices', midx, 'MarkerSize', 4);
+    end
+    ylabel(ax3, 'Speed [km/h]', 'Interpreter', 'latex', 'FontSize', LABEL_FS);
+    xlabel(ax3, 'Time [s]', 'Interpreter', 'latex', 'FontSize', LABEL_FS);
+    title(ax3, '(c) Longitudinal Speed', 'Interpreter', 'latex', 'FontSize', TITLE_FS);
+    ax_style(ax3);
+
+    title(tl, sprintf('\\textbf{Barrier Function Comparison}\\ ($e_{\\max}{=}%g$ m, $\\mu{=}%.1f$, %s)', ...
+        EMAX, MU_VALUE, method), 'Interpreter', 'latex', 'FontSize', 12);
+
+    linkaxes([ax1 ax2 ax3], 'x');
+
+    %% --- Save figure for this method ---
+    fname = sprintf('data_mpc/figs_mpc/phi_comparison_%s', lower(method));
+    exportgraphics(fig, [fname '.png'], 'Resolution', 600);
+    exportgraphics(fig, [fname '.pdf'], 'ContentType', 'vector');
+    fprintf('\nSaved to %s.{png,pdf}\n', fname);
+
+    %% --- Print summary table for this method ---
+    fprintf('\n--- Summary: %s ---\n', method);
+    fprintf('%-25s %10s %10s %10s %10s\n', 'Expression', 'MaxError', 'MeanError', 'MinProb', 'MeanProb');
+    fprintf('%s\n', repmat('-', 1, 70));
+    for k = 1:N
+        e_vals = results{k}.state.state(:,11);
+        p_vals = results{k}.prob.prob;
+        fprintf('%-25s %10.3f %10.3f %10.3f %10.3f\n', ...
+            results{k}.name, max(abs(e_vals)), mean(abs(e_vals)), min(p_vals), mean(p_vals));
+    end
 end
-ylabel(ax1, 'Lateral Error $e$ [m]', 'Interpreter', 'latex', 'FontSize', LABEL_FS);
-title(ax1, sprintf('(a) Lane Tracking Error (%s)', SAFETY_METHOD), ...
-    'Interpreter', 'latex', 'FontSize', TITLE_FS);
-ax_style(ax1);
-set(ax1, 'XTickLabel', []);
-lg1 = legend(ax1, leg_labels, 'Interpreter', 'latex', 'Location', 'best', ...
-    'FontSize', 8, 'Box', 'off');
-lg1.ItemTokenSize = [20, 8];
 
-% (b) Safety probability
-ax2 = nexttile(tl); hold(ax2, 'on'); grid(ax2, 'on');
-for k = 1:N
-    t = results{k}.prob.Time;
-    midx = 1 + (k-1)*marker_offset : mark_every : numel(t);
-    plot(ax2, t, results{k}.prob.prob, ...
-        line_styles{mod(k-1,numel(line_styles))+1}, ...
-        'Color', clr(mod(k-1,size(clr,1))+1,:), 'LineWidth', 1.3, ...
-        'Marker', markers{mod(k-1,numel(markers))+1}, ...
-        'MarkerIndices', midx, 'MarkerSize', 4);
-end
-ylabel(ax2, 'Safety Probability $P$', 'Interpreter', 'latex', 'FontSize', LABEL_FS);
-title(ax2, '(b) Safety Probability', 'Interpreter', 'latex', 'FontSize', TITLE_FS);
-ax_style(ax2);
-set(ax2, 'XTickLabel', []);
-
-% (c) Speed
-ax3 = nexttile(tl); hold(ax3, 'on'); grid(ax3, 'on');
-for k = 1:N
-    t = results{k}.state.Time;
-    midx = 1 + (k-1)*marker_offset : mark_every : numel(t);
-    plot(ax3, t, results{k}.state.state(:,1)*3.6, ...
-        line_styles{mod(k-1,numel(line_styles))+1}, ...
-        'Color', clr(mod(k-1,size(clr,1))+1,:), 'LineWidth', 1.3, ...
-        'Marker', markers{mod(k-1,numel(markers))+1}, ...
-        'MarkerIndices', midx, 'MarkerSize', 4);
-end
-ylabel(ax3, 'Speed [km/h]', 'Interpreter', 'latex', 'FontSize', LABEL_FS);
-xlabel(ax3, 'Time [s]', 'Interpreter', 'latex', 'FontSize', LABEL_FS);
-title(ax3, '(c) Longitudinal Speed', 'Interpreter', 'latex', 'FontSize', TITLE_FS);
-ax_style(ax3);
-
-% Super title
-title(tl, sprintf('\\textbf{Barrier Function Comparison}\\ ($e_{\\max}{=}%g$ m, $\\mu{=}%.1f$, %s)', ...
-    EMAX, MU_VALUE, SAFETY_METHOD), 'Interpreter', 'latex', 'FontSize', 12);
-
-% Link x-axes for synchronized zoom/pan
-linkaxes([ax1 ax2 ax3], 'x');
-
-%% --- Save ---
-exportgraphics(fig, 'data_mpc/figs_mpc/phi_comparison.png', 'Resolution', 600);
-exportgraphics(fig, 'data_mpc/figs_mpc/phi_comparison.pdf', 'ContentType', 'vector');
-fprintf('\nSaved to data_mpc/figs_mpc/phi_comparison.{png,pdf}\n');
-
-%% --- Print summary table ---
-fprintf('\n%-25s %10s %10s %10s %10s\n', 'Expression', 'MaxError', 'MeanError', 'MinProb', 'MeanProb');
-fprintf('%s\n', repmat('-', 1, 70));
-for k = 1:N
-    e_vals = results{k}.state.state(:,11);
-    p_vals = results{k}.prob.prob;
-    fprintf('%-25s %10.3f %10.3f %10.3f %10.3f\n', ...
-        results{k}.name, max(abs(e_vals)), mean(abs(e_vals)), min(p_vals), mean(p_vals));
-end
+% Restore default phi expression after all runs
+set_phi_expr('1 - (e/emax)^2');
+fprintf('\n--- All %d safety methods completed ---\n', M);
