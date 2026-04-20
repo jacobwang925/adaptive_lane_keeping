@@ -51,7 +51,9 @@ The performance of these controllers is compared in terms of **computation time*
 │  ├─ mdl_closed_loop_mpc.slx     ← Main Simulink model
 │  ├─ main_single_run.m           ← Run one scenario (quick test)
 │  ├─ main_parallel_runs.m        ← Run multiple parallel simulations
-│  ├─ compare_phi_expressions.m   ← Compare different barrier function shapes
+│  ├─ phi/                        ← Shared phi helpers + phi comparison scripts
+│  │   ├─ compare_phi_expressions.m   ← Compare barrier shapes (saves data_mpc/*.mat)
+│  │   └─ plot_phi_comparison.m       ← PSC lateral-error figure from comparison results
 │  ├─ param_sweep_parallel.m      ← Run massive parallel ablation simulations
 │  ├─ impl_controller/            ← MPC, PSC, CDBF implementations
 │  ├─ impl_estimator/             ← Friction coefficient estimator
@@ -185,7 +187,8 @@ A key feature of this repository is the ability to compare different **barrier f
 
 ```matlab
 cd codes
-run('compare_phi_expressions.m')
+run('phi/compare_phi_expressions.m')
+run('phi/plot_phi_comparison.m')   % optional: PSC lateral-error overlay figure
 ```
 
 This script compares 4 different barrier function formulations side-by-side:
@@ -205,7 +208,7 @@ This script compares 4 different barrier function formulations side-by-side:
 
 ### Customizing the Comparison
 
-Edit `compare_phi_expressions.m` to test your own expressions:
+Edit `codes/phi/compare_phi_expressions.m` to test your own expressions:
 
 ```matlab
 % Define your own phi expressions

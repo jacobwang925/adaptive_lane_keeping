@@ -1,7 +1,8 @@
-function results = main_single_run(phi_expr, emax, safety_method, mu_value)
+function results = main_single_run(phi_expr, emax, safety_method, mu_value, opts)
 %MAIN_SINGLE_RUN  Run closed-loop simulation with configurable parameters
 %   results = main_single_run() - Run with default parameters (standalone mode)
 %   results = main_single_run(phi_expr, emax, safety_method, mu_value) - Run with custom parameters
+%   results = main_single_run(phi_expr, emax, safety_method, mu_value, opts) - With estimator/velocity overrides
 %
 %   This function runs a closed-loop lane keeping simulation with an MPC
 %   controller. It can be run standalone (no arguments) or called as a
@@ -36,6 +37,11 @@ function results = main_single_run(phi_expr, emax, safety_method, mu_value)
 %       safety_method - 'PSC', 'CDBF', 'DIRECT', or 'NONE' (default: 'DIRECT')
 %       mu_value - Friction coefficient (default: 0.3)
 %                  0.3 = icy, 0.5 = normal, 0.9 = dry
+%       opts     - (optional) struct with estimator / velocity overrides:
+%                  .mu_0     - friction prior mean (default: 0.30)
+%                  .sigma_0  - friction prior variance (default: 0.01)
+%                  .bar_sigma - measurement variance (default: 0.1)
+%                  .init_v   - initial longitudinal speed [m/s] (default: 20*1000/3600)
 %
 %   Output:
 %       results - Struct containing:
@@ -56,7 +62,11 @@ function results = main_single_run(phi_expr, emax, safety_method, mu_value)
 %       % CDBF method (phi expression ignored)
 %       results = main_single_run('', 10, 'CDBF', 0.5);
 %
-%   See also: compare_phi_expressions.m, set_phi_expr.m, fun_safety_condition.m
+%       % PSC with LLM-inferred estimator priors and initial speed
+%       opts.mu_0 = 0.9; opts.sigma_0 = 0.05; opts.bar_sigma = 0.05; opts.init_v = 20;
+%       results = main_single_run('1 - (e/emax)^4', 10, 'PSC', 0.3, opts);
+%
+%   See also: phi/compare_phi_expressions.m, phi/set_phi_expr.m, fun_safety_condition.m
 
     % Check if running standalone (no arguments) or being called as function
     standalone_mode = (nargin == 0);
@@ -84,7 +94,15 @@ function results = main_single_run(phi_expr, emax, safety_method, mu_value)
         end
     end
 
+    if nargin < 5, opts = struct(); end
+    if ~isfield(opts, 'mu_0'),      opts.mu_0      = 0.30;          end
+    if ~isfield(opts, 'sigma_0'),   opts.sigma_0   = 0.01;          end
+    if ~isfield(opts, 'bar_sigma'), opts.bar_sigma = 0.1;           end
+    if ~isfield(opts, 'init_v'),    opts.init_v    = 20*1000/3600;  end
+
     %%%  Path to model %%%%%%%%%%%
+    codesDir = fileparts(mfilename('fullpath'));
+    addpath(fullfile(codesDir, 'phi'));
     addpath impl_controller
     addpath impl_model
     addpath impl_estimator
@@ -98,9 +116,10 @@ function results = main_single_run(phi_expr, emax, safety_method, mu_value)
     ONLINE_ESTIMATION = '1';
     FIXED_ESTIMATION  = '0';
     set_param([mdl '/estimation_sw'],'sw', ONLINE_ESTIMATION)
-    set_param([mdl '/estimate_fixed'], 'Value',  '[0.30, 0.01]')
-    set_param([mdl '/prior'],'InitialCondition', '[0.30, 0.01]')
-    set_param([mdl '/mes_var'], 'Value', '0.1')
+    prior_str = sprintf('[%.4f, %.4f]', opts.mu_0, opts.sigma_0);
+    set_param([mdl '/estimate_fixed'], 'Value',  prior_str)
+    set_param([mdl '/prior'],'InitialCondition', prior_str)
+    set_param([mdl '/mes_var'], 'Value', num2str(opts.bar_sigma))
 
     % Lane error tolerance
     set_param([mdl '/SafeProbabilityMC'],'emax',num2str(emax))
@@ -123,7 +142,7 @@ function results = main_single_run(phi_expr, emax, safety_method, mu_value)
     set_param([mdl '/termination_lat'], 'Value', TERM_LAT_ERROR)
 
     % Initial state
-    V0 = 20 * 1000/3600; % longitudinal speed [m/s]
+    V0 = opts.init_v; % longitudinal speed [m/s]
     Re = 0.325; % Wheel radius [m]
     INIT_DYN  = [V0, 0, 0, 0];
     INIT_OMG  = V0/Re*ones(1,4);
@@ -143,7 +162,7 @@ function results = main_single_run(phi_expr, emax, safety_method, mu_value)
     nlobj.Model.OutputFcn = "fun_output_function";
     nlobj.Model.NumberOfParameters = 2;
     % weights of objective function
-    nlobj.Weights.OutputVariables = [0.03 1 1]; % [Vx,e,psi]
+    nlobj.Weights.OutputVariables = [0.05 1 1]; % [Vx,e,psi]
     nlobj.Weights.ManipulatedVariablesRate = [1 1];
 
     %% Set phi expression and emax config (must happen before validation & codegen)
@@ -238,6 +257,7 @@ function results = main_single_run(phi_expr, emax, safety_method, mu_value)
     results.emax = emax;
     results.safety_method = safety_method;
     results.mu_value = mu_value;
+    results.opts = opts;
 
     disp('--- completed ----')
 

@@ -14,3 +14,9 @@ codes/codegen
 paper
 memo*
 .env
+
+# Generated at runtime by main_single_run.m (emax for DIRECT lane-keep)
+codes/get_emax_config.m
+
+# Local Python venv (e.g. matplotlib export helpers)
+.venv_plot/
