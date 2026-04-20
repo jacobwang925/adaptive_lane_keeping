@@ -1,4 +1,9 @@
 function phi = fun_safety_condition(x, xi, emax)
+% Optional emax: nargin<3 or empty -> 5 (legacy two-arg call sites).
+
+    if nargin < 3 || isempty(emax)
+        emax = 5;
+    end
 
     e   = x(11); % lateral error
     phi = 1 - (e/emax)^2; %#PHI_EXPR

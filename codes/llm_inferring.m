@@ -5,7 +5,7 @@ addpath(fullfile(fileparts(mfilename('fullpath')), 'phi'));
 
 % ---- Parse options
 p = inputParser;
-addParameter(p,'ModelName',"glm-4.7-flash");
+addParameter(p,'ModelName',"gpt-4o-mini");
 addParameter(p,'Temperature',0.0);
 addParameter(p,'MaxNumTokens',300);
 addParameter(p,'UseAddon',true);
@@ -139,40 +139,6 @@ elseif contains(p.Results.ModelName, "deepseek", "IgnoreCase", true)
     %     resp = 'Error: No response from DeepSeek API';
     % end
 
-
-elseif contains(p.Results.ModelName, "glm", "IgnoreCase", true)
-    % --- Z.AI GLM branch ---
-    fprintf("working with " + p.Results.ModelName + "\n")
-    apiKey = getenv('ZAI_API_KEY');
-    apiUrl = 'https://api.z.ai/api/paas/v4/chat/completions';
-
-    headers = {'Authorization', ['Bearer ' apiKey]; ...
-        'Content-Type', 'application/json'};
-
-    messages = [
-        struct('role', 'system', 'content', prompt);
-        struct('role', 'user', 'content', user_input)
-        ];
-
-    requestBody = struct(...
-        'model', p.Results.ModelName, ...
-        'messages', {messages}, ...
-        'temperature', 0.9, ...
-        'max_tokens', 2048, ...
-        'stream', false ...
-        );
-
-    jsonBody = jsonencode(requestBody);
-
-    options = weboptions(...
-        'RequestMethod', 'post', ...
-        'HeaderFields', headers, ...
-        'MediaType', 'application/json', ...
-        'Timeout', 60 ...
-        );
-
-    apiResponse = webwrite(apiUrl, jsonBody, options);
-    resp = apiResponse.choices(1).message.content;
 
 else
     error("Unknown model name: %s", p.Results.ModelName);

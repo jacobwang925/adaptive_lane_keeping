@@ -5,7 +5,6 @@
 *.slxc
 *.r2024a
 *.mexw64
-*.mexa64
 *.autosave
 archive
 resources
