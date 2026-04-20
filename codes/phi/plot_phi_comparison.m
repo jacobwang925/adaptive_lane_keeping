@@ -1,14 +1,14 @@
 % Plot phi comparison from codes/data_mpc/phi_comparison_results.mat (no Simulink).
-% Run after codes/phi/compare_phi_expressions.m (same repo layout). Works when launched
-% from codes/ or from codes/phi/ (paths resolve via this file's location).
+% Intended for PSC-only grids from compare_phi_expressions.m (results_grid is 1×N).
+% Older .mat files with multiple methods (M×N) are still supported if PSC is listed.
 %
-% Single-panel figure for PSC only — lateral error; all phi curves overlaid
-% (invariance to phi shape). Legend outside right, one column.
+% Single-panel figure — lateral error; all phi curves overlaid. Legend eastoutside.
 
 clear; close all;
 
 thisDir = fileparts(mfilename('fullpath'));   % .../codes/phi
 codesDir = fileparts(thisDir);               % .../codes
+addpath(thisDir, codesDir);
 DATA_FILE = fullfile(codesDir, 'data_mpc', 'phi_comparison_results.mat');
 exportDir = fullfile(codesDir, 'data_mpc', 'figs_mpc');
 if ~isfolder(exportDir)
@@ -22,10 +22,10 @@ end
 S = load(DATA_FILE);
 if isfield(S, 'results_grid') && isfield(S, 'safety_method_list')
     results_grid = S.results_grid;
-    safety_method_list = S.safety_method_list;
+    safety_method_list = normalizeMethodList(S.safety_method_list);
 elseif isfield(S, 'results') && isfield(S, 'SAFETY_METHOD')
     results_grid = reshape(S.results, 1, numel(S.results));
-    safety_method_list = {char(S.SAFETY_METHOD)};
+    safety_method_list = normalizeMethodList({S.SAFETY_METHOD});
 else
     error('Unrecognized format in %s', DATA_FILE);
 end
@@ -38,9 +38,13 @@ if ~isequal(size(results_grid), [M, N])
         M, N, mat2str(size(results_grid)));
 end
 
-idx_psc = find(strcmpi(safety_method_list, 'PSC'), 1);
-if isempty(idx_psc)
-    error('PSC not found in safety_method_list — cannot build PSC overlap figure.');
+if M == 1
+    idx_psc = 1;
+else
+    idx_psc = find(cellfun(@(s) strcmpi(char(string(s)), 'PSC'), safety_method_list), 1);
+    if isempty(idx_psc)
+        error('PSC not found in safety_method_list — cannot build PSC overlap figure.');
+    end
 end
 
 TICK_FS  = 9;
@@ -60,7 +64,7 @@ marker_offset = 12;
 % Short names in legend (full expressions are in compare_phi_expressions / text)
 leg_labels = cell(N, 1);
 for k = 1:N
-    short = char(phi_list{k,2});
+    short = char(string(phi_list{k,2}));
     short = regexprep(short, '\s*\(default\)\s*', '', 'ignorecase');
     short = strtrim(short);
     leg_labels{k} = sprintf('{\\it{\\phi}}: %s', short);
@@ -86,9 +90,11 @@ plotH = 1 - tm - plotY - 0.02;
 
 ax1 = axes('Parent', fig, 'Position', [lm, plotY, plotW, plotH]); hold(ax1, 'on'); grid(ax1, 'on');
 h_line = gobjects(N, 1);
+tMax = 0;
 for k = 1:N
     res = results_grid{idx_psc, k};
     t = timeValuesAsSeconds(res.state.Time);
+    tMax = max(tMax, t(end));
     midx = 1 + (k-1)*marker_offset : mark_every : numel(t);
     mk = markers{mod(k-1,numel(markers))+1};
     c = clr(mod(k-1,size(clr,1))+1,:);
@@ -98,11 +104,14 @@ for k = 1:N
         'Marker', mk, 'MarkerIndices', midx, 'MarkerSize', 5, ...
         'MarkerFaceColor', c, 'MarkerEdgeColor', min(c + 0.15, 1));
 end
-% Default xlim picks a round upper tick (e.g. 34.9 s -> 40); tie axis to horizon
-xlim(ax1, [0, ceil(t(end))]);
+xlim(ax1, [0, ceil(tMax)]);
 ylabel(ax1, 'Lateral error {\it{e}} (m)', 'Interpreter', 'tex', 'FontSize', LABEL_FS);
 xlabel(ax1, 'Time (s)', 'Interpreter', 'none', 'FontSize', LABEL_FS);
 ax_style(ax1);
+if isfield(S, 'EMAX') && isfield(S, 'MU_VALUE')
+    title(ax1, sprintf('PSC lateral error (e_{max}=%g m, \\mu=%.2f)', S.EMAX, S.MU_VALUE), ...
+        'Interpreter', 'tex', 'FontSize', LABEL_FS);
+end
 
 lg = legend(ax1, h_line, leg_labels, 'Location', 'eastoutside', ...
     'Interpreter', 'tex', 'FontSize', TICK_FS, 'Box', 'off', 'NumColumns', 1);
@@ -120,6 +129,20 @@ printSummaryTable(results_grid, safety_method_list, phi_list);
 
 %% --- local helpers ---
 
+function sml = normalizeMethodList(sml)
+    if isempty(sml)
+        sml = {};
+        return
+    end
+    if ~iscell(sml)
+        sml = cellstr(sml);
+    end
+    sml = sml(:);
+    for i = 1:numel(sml)
+        sml{i} = char(string(sml{i}));
+    end
+end
+
 function t = timeValuesAsSeconds(tvec)
     % Duration/datetime row times make MATLAB add a duplicate axis unit (e.g. "sec").
     if isduration(tvec)
@@ -136,7 +159,7 @@ function printSummaryTable(results_grid, safety_method_list, phi_list)
     N = size(results_grid, 2);
     fprintf('\n');
     for m = 1:M
-        sm = char(safety_method_list{m});
+        sm = char(string(safety_method_list{m}));
         fprintf('--- %s ---\n', sm);
         fprintf('%-22s %10s %10s %10s %10s\n', 'Expression', 'MaxError', 'MeanError', 'MinProb', 'MeanProb');
         fprintf('%s\n', repmat('-', 1, 66));
@@ -149,7 +172,7 @@ function printSummaryTable(results_grid, safety_method_list, phi_list)
                 name = phi_list{k,2};
             end
             fprintf('%-22s %10.3f %10.3f %10.3f %10.3f\n', ...
-                char(name), max(abs(e_vals)), mean(abs(e_vals)), min(p_vals), mean(p_vals));
+                char(string(name)), max(abs(e_vals)), mean(abs(e_vals)), min(p_vals), mean(p_vals));
         end
         fprintf('\n');
     end
