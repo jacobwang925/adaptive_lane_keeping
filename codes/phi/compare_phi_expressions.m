@@ -1,8 +1,9 @@
 % Compare barrier function (phi) expressions across all safety methods
 %
 % Runs main_single_run for every pair (safety method × phi row), then saves
-% codes/data_mpc/phi_comparison_results.mat. Plot with plot_phi_comparison.m (PSC lateral
-% error, overlapping phi curves).
+% codes/data_mpc/phi_comparison_results.mat and exports one 3-panel figure per method
+% under codes/data_mpc/figs_mpc/phi_comparison_<method>.{png,pdf}. For PSC-only overlap
+% plot, run plot_phi_comparison.m after loading the .mat.
 %
 % Saved variables: results_grid, safety_method_list, phi_list, EMAX, MU_VALUE
 %   results_grid{m,k} — result for safety_method_list{m} and phi_list(k,:)
@@ -78,4 +79,110 @@ if ~isempty(d) && ~isfolder(d)
     mkdir(d);
 end
 save(DATA_FILE, 'results_grid', 'phi_list', 'safety_method_list', 'EMAX', 'MU_VALUE', '-v7.3');
-fprintf('Saved: %s\nPlot: run(''phi/plot_phi_comparison.m'') from the codes/ directory, or open plot_phi_comparison.m in codes/phi/.\n', DATA_FILE);
+fprintf('Saved: %s\n', DATA_FILE);
+
+%% --- Per-method figures (lane error, safety probability, speed) ---
+exportDir = fullfile(codesDir, 'data_mpc', 'figs_mpc');
+if ~isfolder(exportDir)
+    mkdir(exportDir);
+end
+
+TICK_FS  = 9;
+LABEL_FS = 10;
+TITLE_FS = 11;
+clr = [0.000, 0.447, 0.741;
+       0.850, 0.325, 0.098;
+       0.494, 0.184, 0.557;
+       0.466, 0.674, 0.188];
+line_styles   = {'-', '--', '-.', ':'};
+markers       = {'o', 's', 'd', '^'};
+mark_every    = 50;
+marker_offset = 12;
+
+leg_labels = cell(N, 1);
+for k = 1:N
+    leg_labels{k} = sprintf('$\\phi = %s$ (%s)', phi_list{k,1}, phi_list{k,2});
+end
+ax_style = @(ax) set(ax, 'FontSize', TICK_FS, 'TickLabelInterpreter', 'latex', ...
+    'TickDir', 'out', 'GridAlpha', 0.15, 'Box', 'on', 'LineWidth', 0.5);
+
+for mi = 1:M
+    method = char(safety_method_list{mi});
+    results = cell(N, 1);
+    for k = 1:N
+        results{k} = results_grid{mi, k};
+    end
+
+    fig = figure('Color', 'w', 'Units', 'centimeters', 'Position', [2 2 18 18]);
+    tl = tiledlayout(3, 1, 'TileSpacing', 'compact', 'Padding', 'compact');
+
+    ax1 = nexttile(tl); hold(ax1, 'on'); grid(ax1, 'on');
+    for k = 1:N
+        t = results{k}.state.Time;
+        midx = 1 + (k-1)*marker_offset : mark_every : numel(t);
+        plot(ax1, t, results{k}.state.state(:,11), ...
+            line_styles{mod(k-1,numel(line_styles))+1}, ...
+            'Color', clr(mod(k-1,size(clr,1))+1,:), 'LineWidth', 1.3, ...
+            'Marker', markers{mod(k-1,numel(markers))+1}, ...
+            'MarkerIndices', midx, 'MarkerSize', 4);
+    end
+    ylabel(ax1, 'Lateral Error $e$ [m]', 'Interpreter', 'latex', 'FontSize', LABEL_FS);
+    title(ax1, sprintf('(a) Lane Tracking Error (%s)', method), ...
+        'Interpreter', 'latex', 'FontSize', TITLE_FS);
+    ax_style(ax1);
+    set(ax1, 'XTickLabel', []);
+    lg1 = legend(ax1, leg_labels, 'Interpreter', 'latex', 'Location', 'best', ...
+        'FontSize', 8, 'Box', 'off');
+    lg1.ItemTokenSize = [20, 8];
+
+    ax2 = nexttile(tl); hold(ax2, 'on'); grid(ax2, 'on');
+    for k = 1:N
+        t = results{k}.prob.Time;
+        midx = 1 + (k-1)*marker_offset : mark_every : numel(t);
+        plot(ax2, t, results{k}.prob.prob, ...
+            line_styles{mod(k-1,numel(line_styles))+1}, ...
+            'Color', clr(mod(k-1,size(clr,1))+1,:), 'LineWidth', 1.3, ...
+            'Marker', markers{mod(k-1,numel(markers))+1}, ...
+            'MarkerIndices', midx, 'MarkerSize', 4);
+    end
+    ylabel(ax2, 'Safety Probability $P$', 'Interpreter', 'latex', 'FontSize', LABEL_FS);
+    title(ax2, '(b) Safety Probability', 'Interpreter', 'latex', 'FontSize', TITLE_FS);
+    ax_style(ax2);
+    set(ax2, 'XTickLabel', []);
+
+    ax3 = nexttile(tl); hold(ax3, 'on'); grid(ax3, 'on');
+    for k = 1:N
+        t = results{k}.state.Time;
+        midx = 1 + (k-1)*marker_offset : mark_every : numel(t);
+        plot(ax3, t, results{k}.state.state(:,1)*3.6, ...
+            line_styles{mod(k-1,numel(line_styles))+1}, ...
+            'Color', clr(mod(k-1,size(clr,1))+1,:), 'LineWidth', 1.3, ...
+            'Marker', markers{mod(k-1,numel(markers))+1}, ...
+            'MarkerIndices', midx, 'MarkerSize', 4);
+    end
+    ylabel(ax3, 'Speed [km/h]', 'Interpreter', 'latex', 'FontSize', LABEL_FS);
+    xlabel(ax3, 'Time [s]', 'Interpreter', 'latex', 'FontSize', LABEL_FS);
+    title(ax3, '(c) Longitudinal Speed', 'Interpreter', 'latex', 'FontSize', TITLE_FS);
+    ax_style(ax3);
+
+    title(tl, sprintf('\\textbf{Barrier Function Comparison}\\ ($e_{\\max}{=}%g$ m, $\\mu{=}%.1f$, %s)', ...
+        EMAX, MU_VALUE, method), 'Interpreter', 'latex', 'FontSize', 12);
+    linkaxes([ax1 ax2 ax3], 'x');
+
+    fname = fullfile(exportDir, sprintf('phi_comparison_%s', lower(method)));
+    exportgraphics(fig, [fname '.png'], 'Resolution', 600);
+    exportgraphics(fig, [fname '.pdf'], 'ContentType', 'vector');
+    fprintf('Saved figure: %s.{png,pdf}\n', fname);
+
+    fprintf('\n--- Summary: %s ---\n', method);
+    fprintf('%-25s %10s %10s %10s %10s\n', 'Expression', 'MaxError', 'MeanError', 'MinProb', 'MeanProb');
+    fprintf('%s\n', repmat('-', 1, 70));
+    for k = 1:N
+        e_vals = results{k}.state.state(:,11);
+        p_vals = results{k}.prob.prob;
+        fprintf('%-25s %10.3f %10.3f %10.3f %10.3f\n', ...
+            results{k}.name, max(abs(e_vals)), mean(abs(e_vals)), min(p_vals), mean(p_vals));
+    end
+end
+
+fprintf('\nPSC overlap plot: run(''phi/plot_phi_comparison.m'') from codes/ or open codes/phi/plot_phi_comparison.m.\n');
