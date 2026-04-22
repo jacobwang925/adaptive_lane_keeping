@@ -47,13 +47,12 @@ The performance of these controllers is compared in terms of **computation time*
 ```
 .
 ├─ README.md
+├─ .env.example            ← template for API keys (copy to `.env` in repo root; see §6 and LLM)
 ├─ codes/
 │  ├─ mdl_closed_loop_mpc.slx     ← Main Simulink model
 │  ├─ main_single_run.m           ← Run one scenario (quick test)
 │  ├─ main_parallel_runs.m        ← Run multiple parallel simulations
-│  ├─ phi/                        ← Shared phi helpers + phi comparison scripts
-│  │   ├─ compare_phi_expressions.m   ← Compare barrier shapes (saves data_mpc/*.mat)
-│  │   └─ plot_phi_comparison.m       ← PSC lateral-error figure from comparison results
+│  ├─ phi_generation/              ← Custom barrier (phi) helpers, comparison scripts, LLM+phi pipeline
 │  ├─ param_sweep_parallel.m      ← Run massive parallel ablation simulations
 │  ├─ impl_controller/            ← MPC, PSC, CDBF implementations
 │  ├─ impl_estimator/             ← Friction coefficient estimator
@@ -128,22 +127,18 @@ run('main_parallel_runs.m')
 
 ## 4. Switching controllers
 
-In `main_single_run.m`, the controller is selected via the `safety_method` parameter:
+In both main scripts, you can choose the controller by enabling the corresponding inequality function:
 
 ```matlab
-% Standalone: edit the default on line 69
-safety_method = 'DIRECT';  % 'PSC', 'CDBF', 'DIRECT', or 'NONE'
+% Proposed (Adaptive MPC + PSC)
+nlobj.Optimization.CustomIneqConFcn = "fun_inequality";
 
-% Function call: pass as third argument
-results = main_single_run(phi_expr, emax, 'PSC', mu_value);
+% CDBF
+nlobj.Optimization.CustomIneqConFcn = "fun_inequality_CDBF";
+
+% Adaptive MPC (no safety constraints)
+nlobj.Optimization.CustomIneqConFcn = [];
 ```
-
-| Method | Constraint Function | Description |
-|--------|-------------------|-------------|
-| `'PSC'` | `fun_inequality` | Adaptive MPC + Probabilistic Safety Certificate |
-| `'CDBF'` | `fun_inequality_CDBF` | Adaptive MPC + Control-Dependent Barrier Function |
-| `'DIRECT'` | `fun_inequality_direct_lane_keep` | Direct lane keeping constraint using `fun_safety_condition()` |
-| `'NONE'` | *(none)* | Adaptive MPC without safety constraints |
 
 ### Note on code generation
 
@@ -179,72 +174,42 @@ set_param([mdl '/mes_var'], 'Value', '0.1')                  % Measurement noise
 
 ---
 
-## 6. Barrier Function (Phi) Expression Comparison
+## 6. Phi generation (`codes/phi_generation/`)
 
-A key feature of this repository is the ability to compare different **barrier function shapes** (phi expressions) and their impact on safety performance. This is particularly relevant when using the **PSC (Proposed)** safety method.
+This folder holds **optional** tooling to compare and generate PSC barrier shapes *phi(e, emax)*, and to run an **end-to-end LLM+phi** experiment (`run_llm_pipeline.m`) that is separate from the paper’s baseline `main_single_run.m` script. The baseline `main_single_run.m` script (as on `main`) is unchanged; programmable runs that inject custom *phi* use `main_single_run_phi.m` in this folder.
 
-### Quick Start: Compare Phi Expressions
+### API keys (`.env`)
 
-```matlab
-cd codes
-run('phi/compare_phi_expressions.m')
-run('phi/plot_phi_comparison.m')   % optional: PSC lateral-error overlay figure
-```
+For scripts that call cloud LLMs, copy [`.env.example`](.env.example) to a file named **`.env`** in the **repository root** and set your keys (the file is gitignored). Names used in this project:
 
-This script compares 4 different barrier function formulations side-by-side:
-- **Quadratic** (default): `1 - (e/emax)^2`
-- **Quartic**: `1 - (e/emax)^4` - flatter near center, steeper near boundary
-- **Cosine**: `cos(pi*e/(2*emax))` - very smooth at boundary
-- **Linear**: `1 - abs(e/emax)` - constant slope
+- `OPENAI_API_KEY` — OpenAI (GPT)
+- `GEMINI_API_KEY` — Google Gemini
+- `DEEPSEEK_API_KEY` — DeepSeek
 
-### Important: Safety Methods and Phi Expressions
+You can still place keys directly in ablation code if you prefer; the `.env` flow is for `phi_generation/run_llm_pipeline.m` and similar tools that read the environment at runtime.
 
-| Safety Method | Phi Shape Matters? | Description |
-|---------------|-----------|-------------|
-| **DIRECT** | ✅ **YES** | Enforces `phi(e) >= 0` directly in the MPC constraint via `fun_safety_condition()`. Different phi shapes produce different controller behavior. |
-| **PSC** | ❌ Effectively NO | Uses `fun_safety_condition()` in Monte Carlo simulations, but only checks the **sign** of phi (safe/unsafe). Since all standard expressions cross zero at `|e| = emax`, the shape has no effect on the probability or Lie derivatives. |
-| **CDBF** | ❌ NO | Uses vehicle dynamics directly, ignores phi |
-| **AMPC** | ❌ NO | No safety constraints, ignores phi |
+### Compare barrier expressions (no LLM)
 
-### Customizing the Comparison
-
-Edit `codes/phi/compare_phi_expressions.m` to test your own expressions:
+From `codes/`:
 
 ```matlab
-% Define your own phi expressions
-phi_list = {
-    '1 - (e/emax)^2',          'my quadratic';
-    'exp(-(e/emax)^2)',        'gaussian';      % Add your own!
-    'your_expression_here',    'custom name';
-};
-
-% Change safety method (use DIRECT for phi shape comparison)
-SAFETY_METHOD = 'DIRECT';  % 'PSC', 'CDBF', 'DIRECT', or 'NONE'
-
-% Adjust simulation parameters
-EMAX = 3;        % Lane error tolerance [m]
-MU_VALUE = 0.3;  % Friction coefficient (0.3=icy, 0.9=dry)
+run('phi_generation/compare_phi_expressions.m')   % writes data_mpc/phi_comparison_results.mat
+run('phi_generation/plot_phi_comparison.m')       % optional figure from that .mat
 ```
 
-> **Note:** Non-smooth expressions (e.g. `abs()`) or expressions with steep gradients near the boundary (e.g. cosine) may cause the MPC solver to diverge. Prefer smooth expressions like quadratic or quartic for stable results.
+Edit `compare_phi_expressions.m` to change the list of expressions and `PSC` settings. The comparison driver calls `main_single_run_phi` and restores `codes/fun_safety_condition.m` to the mainline implementation when finished; see the scripts in `phi_generation/` for details.
 
-### Using Custom Phi Expressions in Single Runs
+### LLM + phi (optional)
 
-```matlab
-% Run with custom phi expression and DIRECT method
-results = main_single_run('1 - (e/emax)^4', 3, 'DIRECT', 0.3);
+`run_llm_pipeline.m` (under `phi_generation/`) uses the `_phi` LLM helpers in that folder. Ensure `.env` is configured as above.
 
-% Arguments: phi_expr, emax, safety_method, mu_value
-```
+### Note on which *phi* shapes matter
 
-### Understanding the Results
-
-Different phi expressions affect:
-- **Safety Probability** $p$ - likelihood of staying within lane bounds over the horizon
-- **Lie Derivatives** $L_fP$, $L_gP$ - how quickly safety probability changes with state and control
-- **Controller Conservatism** - steeper phi functions generally lead to more conservative behavior
-
-For detailed technical information, see [docs/model_overview.md](docs/model_overview.md).
+| Safety method | *phi* shape in practice |
+| --- | --- |
+| **DIRECT** | Barrier enters the MPC inequality; different analytic *phi* generally changes behavior. |
+| **PSC** | Monte-Carlo step uses the sign of *phi*; do not expect strong discrimination between smooth barriers that share the same safe/unsafe boundary. |
+| **CDBF** / no constraint | Not driven by `fun_safety_condition` the same way; see in-code comments. |
 
 ---
 
@@ -343,7 +308,7 @@ and
 cd codes
 run('show_result_estimator.m')
 ```
-Please ensure you provide your own API keys in the code before execution.
+Please ensure you provide your own API keys before execution: either in the ablation code as in the original workflow, or via a **`.env`** file in the repo root (see **§6** and [`.env.example`](.env.example)).
 Matlab add-on Large Language Models (LLMs) with MATLAB is required (https://www.mathworks.com/matlabcentral/fileexchange/163796-large-language-models-llms-with-matlab).
 
 ### LLMs evaluated
@@ -363,3 +328,4 @@ Matlab add-on Large Language Models (LLMs) with MATLAB is required (https://www.
   year={2025}
 }
 ```
+

@@ -6,7 +6,7 @@
 
 clear; close all;
 
-thisDir = fileparts(mfilename('fullpath'));   % .../codes/phi
+thisDir = fileparts(mfilename('fullpath'));   % .../codes/phi_generation
 codesDir = fileparts(thisDir);               % .../codes
 addpath(thisDir, codesDir);
 DATA_FILE = fullfile(codesDir, 'data_mpc', 'phi_comparison_results.mat');
@@ -16,7 +16,7 @@ if ~isfolder(exportDir)
 end
 
 if ~isfile(DATA_FILE)
-    error('Missing %s — run codes/phi/compare_phi_expressions.m first.', DATA_FILE);
+    error('Missing %s — run codes/phi_generation/compare_phi_expressions.m first.', DATA_FILE);
 end
 
 S = load(DATA_FILE);

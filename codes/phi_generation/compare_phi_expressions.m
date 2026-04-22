@@ -1,6 +1,6 @@
 % Compare barrier function (phi) expressions under PSC only
 %
-% Runs main_single_run once per phi row with safety_method 'PSC', then saves
+% Runs main_single_run_phi once per phi row with safety_method 'PSC', then saves
 % codes/data_mpc/phi_comparison_results.mat (results_grid is 1×N).
 % Figures: run plot_phi_comparison.m (PSC lateral-error overlay + exports).
 %
@@ -9,7 +9,7 @@
 
 clear; close all;
 
-thisDir = fileparts(mfilename('fullpath'));   % .../codes/phi
+thisDir = fileparts(mfilename('fullpath'));   % .../codes/phi_generation
 codesDir = fileparts(thisDir);               % .../codes
 addpath(thisDir, codesDir, ...
     fullfile(codesDir, 'impl_controller'), ...
@@ -48,7 +48,7 @@ for k = 1:N
     fprintf('\n=== Run %d/%d  PSC  phi=%s (%s) ===\n', ...
         run_id, total_runs, phi_list{k,2}, phi_list{k,1});
 
-    res = main_single_run(phi_list{k,1}, EMAX, sm, MU_VALUE);
+    res = main_single_run_phi(phi_list{k,1}, EMAX, sm, MU_VALUE);
 
     res.name = phi_list{k,2};
     res.expr = phi_list{k,1};
@@ -59,8 +59,8 @@ for k = 1:N
         max(abs(res.state.state(:,11))), min(res.prob.prob));
 end
 
-set_phi_expr('1 - (e/emax)^2');
-disp('--- all runs completed ----')
+restore_fun_safety_from_main();
+disp('--- all runs completed (codes/fun_safety_condition.m restored to main) ----')
 
 d = fileparts(DATA_FILE);
 if ~isempty(d) && ~isfolder(d)
@@ -68,4 +68,4 @@ if ~isempty(d) && ~isfolder(d)
 end
 save(DATA_FILE, 'results_grid', 'phi_list', 'safety_method_list', 'EMAX', 'MU_VALUE', '-v7.3');
 fprintf('Saved: %s\n', DATA_FILE);
-fprintf('PSC figure: run(''phi/plot_phi_comparison.m'') from codes/ or open codes/phi/plot_phi_comparison.m.\n');
+fprintf('PSC figure: run(''phi_generation/plot_phi_comparison.m'') from codes/ or open codes/phi_generation/plot_phi_comparison.m.\n');

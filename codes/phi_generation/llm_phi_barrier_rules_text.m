@@ -1,5 +1,5 @@
 function s = llm_phi_barrier_rules_text()
-%LLM_PHI_BARRIER_RULES_TEXT  Shared phi barrier instructions (same as codes/phi/run_llm_phi_ablation.m).
+%LLM_PHI_BARRIER_RULES_TEXT  Shared phi barrier instructions (same as codes/phi_generation/run_llm_phi_ablation.m).
 %   Aligns with phi_expr_passes_barrier_check: real/finite on [-2*emax, 2*emax], safe sqrt/log.
 
 s = "Produce a unique safety barrier function expression in MATLAB syntax using variables 'e' (lateral error) and 'emax' (maximum allowed error; use the same numeric scale as your chosen e_max). " + ...

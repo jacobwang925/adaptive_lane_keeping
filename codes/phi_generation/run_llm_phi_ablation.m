@@ -1,6 +1,6 @@
 clear; clc; close all;
 
-thisDir = fileparts(mfilename('fullpath'));   % .../codes/phi
+thisDir = fileparts(mfilename('fullpath'));   % .../codes/phi_generation
 addpath(thisDir);  % llm_phi_barrier_rules_text, phi_expr_passes_barrier_check
 
 repoRoot = fileparts(fileparts(thisDir));    % repository root (parent of codes/)
@@ -91,7 +91,7 @@ for m_idx = 1:length(models)
             
             expressions(k) = resp_expr;
             
-            % -- Validate Math (same as codes/phi/run_llm_pipeline.m validate_phi via phi_expr_passes_barrier_check) --
+            % -- Validate Math (same as codes/phi_generation/run_llm_pipeline.m validate_phi via phi_expr_passes_barrier_check) --
             [ok, val_0, val_emax, errMsg] = phi_expr_passes_barrier_check(resp_expr, emax_test);
             if ok
                 is_valid_arr(k) = true;

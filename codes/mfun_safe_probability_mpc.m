@@ -58,7 +58,7 @@ function p = safe_probability(x_ini, paramMC, paramDis, nlobj)
             x = transpose( y(end,:) );
 
             % unsafe if barrier function go below 0
-            if fun_safety_condition(x,xi) < 0
+            if fun_safety_condition(x,xi) < 0 
                 samples(i)   = 0;
                 break
             end

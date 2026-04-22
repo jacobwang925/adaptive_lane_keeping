@@ -3,7 +3,7 @@
 %   1. User provides a natural-language driving preference
 %   2. LLM infers controller parameters + phi expression
 %   3. Phi expression is validated; fallback to quadratic if invalid
-%   4. Simulink simulation runs via main_single_run
+%   4. Simulink simulation runs via main_single_run_phi (under codes/phi_generation)
 %   5. Feedback is built from Run 1
 %   6. User follow-up -> LLM reasoning -> second simulation (Run 2)
 %   7. Cumulative feedback (Runs 1--2) + third user message -> LLM -> Run 3
@@ -11,15 +11,15 @@
 
 clear; clc; close all;
 
-codesDir = fileparts(fileparts(mfilename('fullpath')));  % .../codes (script lives in codes/phi/)
+codesDir = fileparts(fileparts(mfilename('fullpath')));  % .../codes (script lives in codes/phi_generation/)
 repoRoot = fileparts(codesDir);              % repository root
 
-% Simulink + helpers assume cwd is codes/ (main_single_run uses relative addpath).
+% Simulink + helpers assume cwd is codes/ (main_single_run_phi uses addpath from file location).
 userDir = pwd;
 cd(codesDir);
 cleanupObj = onCleanup(@() cd(userDir)); %#ok<NASGU>
 
-addpath(fullfile(codesDir, 'phi'));
+addpath(fullfile(codesDir, 'phi_generation'));
 
 %% 1. Load API Keys from .env
 env_str = fileread(fullfile(repoRoot, '.env'));
@@ -52,7 +52,7 @@ user_input_3 = "Find a balance between comfort and getting there quickly: not as
 fprintf('\n========== RUN 1: Initial Inference ==========\n');
 fprintf('User: "%s"\n\n', user_input_1);
 
-S1 = call_llm_with_retry(@() llm_inferring(user_input_1, 'ModelName', LLM_MODEL), ...
+S1 = call_llm_with_retry(@() llm_inferring_phi(user_input_1, 'ModelName', LLM_MODEL), ...
     MAX_RETRIES, RETRY_DELAY);
 
 phi_llm_returned_1 = llmPhiFromStruct(S1);
@@ -70,7 +70,7 @@ fprintf('  phi used in simulation:     %s\n', char(phi_expr_1));
 opts1 = struct('mu_0', S1.mu_0, 'sigma_0', S1.sigma_0, ...
     'bar_sigma', S1.bar_sigma, 'init_v', S1.init_v);
 fprintf('\nRunning simulation...\n');
-results_1 = main_single_run(char(phi_expr_1), S1.e_max, char(SAFETY_METHOD), MU_VALUE, opts1);
+results_1 = main_single_run_phi(char(phi_expr_1), S1.e_max, char(SAFETY_METHOD), MU_VALUE, opts1);
 
 %% 5. Build Feedback from Run 1
 e1      = results_1.state.state(:,11);
@@ -102,7 +102,7 @@ fprintf('\n--- Feedback to LLM ---\n%s\n', data_fb);
 fprintf('\n========== RUN 2: Reasoning with Feedback ==========\n');
 fprintf('User: "%s"\n\n', user_input_2);
 
-S2 = call_llm_with_retry(@() llm_reasoning(data_fb, user_input_2, 'ModelName', LLM_MODEL), ...
+S2 = call_llm_with_retry(@() llm_reasoning_phi(data_fb, user_input_2, 'ModelName', LLM_MODEL), ...
     MAX_RETRIES, RETRY_DELAY);
 
 phi_llm_returned_2 = llmPhiFromStruct(S2);
@@ -120,7 +120,7 @@ fprintf('  phi used in simulation:     %s\n', char(phi_expr_2));
 opts2 = struct('mu_0', S2.mu_0, 'sigma_0', S2.sigma_0, ...
     'bar_sigma', S2.bar_sigma, 'init_v', S2.init_v);
 fprintf('\nRunning simulation...\n');
-results_2 = main_single_run(char(phi_expr_2), S2.e_max, char(SAFETY_METHOD), MU_VALUE, opts2);
+results_2 = main_single_run_phi(char(phi_expr_2), S2.e_max, char(SAFETY_METHOD), MU_VALUE, opts2);
 
 %% 6b. Build cumulative feedback (Run 1 + Run 2) for third LLM call
 e2     = results_2.state.state(:,11);
@@ -154,7 +154,7 @@ fprintf('\n--- Cumulative feedback (Runs 1--2) to LLM ---\n%s\n', data_fb_cum);
 fprintf('\n========== RUN 3: Reasoning with Cumulative Feedback ==========\n');
 fprintf('User: "%s"\n\n', user_input_3);
 
-S3 = call_llm_with_retry(@() llm_reasoning(data_fb_cum, user_input_3, 'ModelName', LLM_MODEL), ...
+S3 = call_llm_with_retry(@() llm_reasoning_phi(data_fb_cum, user_input_3, 'ModelName', LLM_MODEL), ...
     MAX_RETRIES, RETRY_DELAY);
 
 phi_llm_returned_3 = llmPhiFromStruct(S3);
@@ -172,7 +172,7 @@ fprintf('  phi used in simulation:     %s\n', char(phi_expr_3));
 opts3 = struct('mu_0', S3.mu_0, 'sigma_0', S3.sigma_0, ...
     'bar_sigma', S3.bar_sigma, 'init_v', S3.init_v);
 fprintf('\nRunning simulation...\n');
-results_3 = main_single_run(char(phi_expr_3), S3.e_max, char(SAFETY_METHOD), MU_VALUE, opts3);
+results_3 = main_single_run_phi(char(phi_expr_3), S3.e_max, char(SAFETY_METHOD), MU_VALUE, opts3);
 
 %% 8. Trim Run 3 signals (for console summary; full series remain in results_*)
 e3     = results_3.state.state(:,11);
@@ -290,8 +290,8 @@ save(savefile, 'results_1', 'results_2', 'results_3', 'S1', 'S2', 'S3', ...
 fprintf('\nSaved: %s\n', savefile);
 fprintf('  (results_*, S*, pipeline_report, max_E/mean_E/min_P/mean_P/top_speed/avg_speed, phi_*, feedback, config)\n');
 
-% Restore default phi
-set_phi_expr('1 - (e/emax)^2');
+% Restore codes/fun_safety_condition.m to main (undo phi experiments)
+restore_fun_safety_from_main();
 
 %% ===== Local Functions =====
 
@@ -314,7 +314,7 @@ end
 
 function [phi_expr, llm_validated] = validate_phi(S, default_phi)
 % llm_validated = true iff the returned phi is the LLM string that passed checks (not default fallback).
-% Uses phi_expr_passes_barrier_check (same rule as codes/phi/run_llm_phi_ablation.m; emax = S.e_max).
+% Uses phi_expr_passes_barrier_check (same rule as codes/phi_generation/run_llm_phi_ablation.m; emax = S.e_max).
     llm_validated = false;
     if ~isfield(S, 'phi_expr') || isempty(S.phi_expr)
         fprintf('  LLM phi_expr (rejected): (empty or missing in JSON)\n');

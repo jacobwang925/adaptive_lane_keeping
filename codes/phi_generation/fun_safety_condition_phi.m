@@ -1,16 +1,14 @@
 function phi = fun_safety_condition(x, xi, emax)
+% Optional emax: nargin<3 or empty -> 5 (legacy two-arg call sites).
 
-    phi = lane_keeping(x, xi, emax);
+    if nargin < 3 || isempty(emax)
+        emax = 5;
+    end
+
+    e   = x(11); % lateral error
+    phi = 1 - (e/emax)^2; %#PHI_EXPR
+
    %phi = tire_forces(x, xi);
-
-end
-
-% Lane Keeping
-function phi = lane_keeping(x, xi, emax)
-
-    e    = x(11); % lateral error
-    % emax = 5; 
-    phi = 1 - (e/emax)^2;
 
 end
 
