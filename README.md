@@ -52,13 +52,7 @@ The performance of these controllers is compared in terms of **computation time*
 │  ├─ mdl_closed_loop_mpc.slx     ← Main Simulink model
 │  ├─ main_single_run.m           ← Run one scenario (quick test)
 │  ├─ main_parallel_runs.m        ← Run multiple parallel simulations
-│  ├─ phi_generation/            ← PSC barrier phi: compare, LLM+phi pipeline, restore safety fn to main
-│  │   ├─ compare_phi_expressions.m  ← Compare barrier shapes; saves `data_mpc/phi_comparison_results.mat`
-│  │   ├─ plot_phi_comparison.m      ← Figure from that `.mat`
-│  │   ├─ run_llm_pipeline.m         ← End-to-end LLM + phi (`.env` API keys)
-│  │   ├─ main_single_run_phi.m      ← Programmable sim with custom phi (see §6)
-│  │   ├─ set_phi_expr.m             ← Writes `fun_safety_condition_phi.m` → `../fun_safety_condition.m`
-│  │   └─ restore_fun_safety_from_main.m  ← Copy mainline snapshot back to `fun_safety_condition.m`
+│  ├─ phi_generation/            ← Custom PSC *phi* (barrier) helpers: compare runs, LLM+phi pipeline & ablation, inject/restore `fun_safety_condition` (see §6)
 │  ├─ param_sweep_parallel.m      ← Run massive parallel ablation simulations
 │  ├─ impl_controller/            ← MPC, PSC, CDBF implementations
 │  ├─ impl_estimator/             ← Friction coefficient estimator
