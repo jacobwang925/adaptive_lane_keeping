@@ -47,12 +47,12 @@ The performance of these controllers is compared in terms of **computation time*
 ```
 .
 ├─ README.md
-├─ .env.example            ← template for API keys (copy to `.env` in repo root; see §6 and LLM)
+├─ .env.example            ← API key variable names; copy to `.env` in repo root (see §9)
 ├─ codes/
 │  ├─ mdl_closed_loop_mpc.slx     ← Main Simulink model
 │  ├─ main_single_run.m           ← Run one scenario (quick test)
 │  ├─ main_parallel_runs.m        ← Run multiple parallel simulations
-│  ├─ phi_generation/            ← Custom PSC *phi* (barrier) helpers: compare runs, LLM+phi pipeline & ablation, inject/restore `fun_safety_condition` (see §6)
+│  ├─ phi_generation/            ← Optional PSC barrier *phi* tooling (see §9)
 │  ├─ param_sweep_parallel.m      ← Run massive parallel ablation simulations
 │  ├─ impl_controller/            ← MPC, PSC, CDBF implementations
 │  ├─ impl_estimator/             ← Friction coefficient estimator
@@ -174,9 +174,115 @@ set_param([mdl '/mes_var'], 'Value', '0.1')                  % Measurement noise
 
 ---
 
-## 6. Phi generation (`codes/phi_generation/`)
+## 6. Outputs
 
-Section 3 uses `main_single_run.m` as a **script** for the paper baseline. The `phi_generation/` folder is **optional**: it provides `main_single_run_phi.m` for closed-loop runs with a **custom barrier** *phi*, plus scripts that compare analytical *phi* or use LLMs to propose *phi*. See [`.env.example`](.env.example) for API variable names used by the LLM entries below.
+Each run produces:
+
+- `MU` – true friction coefficient samples  
+- `PROB` – safety probability over time  
+- `SPEED` – longitudinal speed  
+- `TRAJ` – vehicle trajectories  
+- `STATE` – full system states  
+- `ETIME` – elapsed MPC solve time  
+
+These are stored in `.mat` files such as:
+
+```
+data_mpc/data_AMPC_multi_icy_H10.mat
+data_mpc/data_CDBF_multi_icy_H10.mat
+data_mpc/data_APSC_multi_icy_H10.mat
+```
+
+## 
+
+## 7. Parameter ablation runs
+
+To reproduce the ablation experiments and trade-off visualizations:
+
+```
+cd codes
+run('param_sweep_parallel.m')
+```
+
+- This script performs **massive parameter sweeps** (different friction ranges, estimator settings, and controller types).
+
+- It will **take a long time** — approximately **2 days on a workstation with 20 CPU cores**.
+
+- Results are automatically stored under:
+
+  ```
+  codes/data_mpc/
+  ```
+
+After the sweep completes:
+
+1. **Visualize all trajectories and summary statistics:**
+
+   ```
+   run('data_mpc/plot_trajectories_all.m')
+   ```
+
+   This generates aggregated trajectory plots and performance metrics inside `data_mpc/figs_mpc/`.
+
+2. **Reproduce the safety–efficiency trade-off plot:**
+
+   ```
+   run('data_mpc/tradeoff_plot.m')
+   ```
+
+   This script recreates the final trade-off figures used in the paper or documentation.
+
+## 8. LLM Experiments
+
+![user_adaptation](docs/user_adaptation.png)
+
+To reproduce the experiment results reported in Table 1 and Table 2:
+
+```
+cd codes
+run('run_llm_ablation_control.m')
+```
+This script evaluates how different LLMs infer control-related safety parameters from natural-language user inputs, and how these inferred parameters alter the closed-loop lane-keeping performance across multiple controllers.
+  - **Run 1** uses the *aggressive* user input  
+  - **Run 2** uses the *conservative* user input (and receives feedback from Run 1)
+
+```
+cd codes
+run('run_llm_ablation_estimator.m')
+```
+
+This script evaluates how LLMs infer control-related safety parameters when the same user input is used for both runs.
+  - **Run 1** use *dry and unsure* user input
+  - **Run 2** use *dry and unsure* user input (and receives feedback from Run 1)
+
+All result files are saved to:
+  ```
+  LLM/llm_results
+  ```
+To visualize the results:
+```
+cd codes
+run('show_result_control.m')
+```
+and
+```
+cd codes
+run('show_result_estimator.m')
+```
+Please ensure you provide your own API keys in the code before execution.
+For optional barrier-function + LLM scripts (`phi_generation/`, §9), you can instead use a **`.env`** file in the repository root; see [`.env.example`](.env.example).
+Matlab add-on Large Language Models (LLMs) with MATLAB is required (https://www.mathworks.com/matlabcentral/fileexchange/163796-large-language-models-llms-with-matlab).
+
+### LLMs evaluated
+- GPT-4o-mini  
+- GPT-3.5-Turbo  
+- Gemini-2.5-Flash  
+- Gemini-2.0-Flash  
+- DeepSeek-Chat
+
+## 9. Ablations: LLM barrier function generation
+
+Section 3 uses `main_single_run.m` as a **script** for the paper baseline. The `codes/phi_generation/` folder is **optional**: it provides `main_single_run_phi.m` for closed-loop runs with a **custom barrier** *phi*, plus scripts that compare analytical *phi* or use LLMs to propose *phi*. See [`.env.example`](.env.example) for API variable names used by the LLM entries below.
 
 ### `main_single_run_phi.m`
 
@@ -224,111 +330,6 @@ run('phi_generation/run_llm_phi_ablation.m')
 - Results: `LLM/llm_results/phi_ablation.mat` (`all_results`, `models`, `num_trials`).
 
 ---
-
-## 7. Outputs
-
-Each run produces:
-
-- `MU` – true friction coefficient samples  
-- `PROB` – safety probability over time  
-- `SPEED` – longitudinal speed  
-- `TRAJ` – vehicle trajectories  
-- `STATE` – full system states  
-- `ETIME` – elapsed MPC solve time  
-
-These are stored in `.mat` files such as:
-
-```
-data_mpc/data_AMPC_multi_icy_H10.mat
-data_mpc/data_CDBF_multi_icy_H10.mat
-data_mpc/data_APSC_multi_icy_H10.mat
-```
-
-## 
-
-## 8. Parameter ablation runs
-
-To reproduce the ablation experiments and trade-off visualizations:
-
-```
-cd codes
-run('param_sweep_parallel.m')
-```
-
-- This script performs **massive parameter sweeps** (different friction ranges, estimator settings, and controller types).
-
-- It will **take a long time** — approximately **2 days on a workstation with 20 CPU cores**.
-
-- Results are automatically stored under:
-
-  ```
-  codes/data_mpc/
-  ```
-
-After the sweep completes:
-
-1. **Visualize all trajectories and summary statistics:**
-
-   ```
-   run('data_mpc/plot_trajectories_all.m')
-   ```
-
-   This generates aggregated trajectory plots and performance metrics inside `data_mpc/figs_mpc/`.
-
-2. **Reproduce the safety–efficiency trade-off plot:**
-
-   ```
-   run('data_mpc/tradeoff_plot.m')
-   ```
-
-   This script recreates the final trade-off figures used in the paper or documentation.
-
-## 9. LLM Experiments
-
-![user_adaptation](docs/user_adaptation.png)
-
-To reproduce the experiment results reported in Table 1 and Table 2:
-
-```
-cd codes
-run('run_llm_ablation_control.m')
-```
-This script evaluates how different LLMs infer control-related safety parameters from natural-language user inputs, and how these inferred parameters alter the closed-loop lane-keeping performance across multiple controllers.
-  - **Run 1** uses the *aggressive* user input  
-  - **Run 2** uses the *conservative* user input (and receives feedback from Run 1)
-
-```
-cd codes
-run('run_llm_ablation_estimator.m')
-```
-
-This script evaluates how LLMs infer control-related safety parameters when the same user input is used for both runs.
-  - **Run 1** use *dry and unsure* user input
-  - **Run 2** use *dry and unsure* user input (and receives feedback from Run 1)
-
-All result files are saved to:
-  ```
-  LLM/llm_results
-  ```
-To visualize the results:
-```
-cd codes
-run('show_result_control.m')
-```
-and
-```
-cd codes
-run('show_result_estimator.m')
-```
-Please ensure you provide your own API keys before execution: either in the ablation code as in the original workflow, or via a **`.env`** file in the repo root (see **§6** and [`.env.example`](.env.example)).
-Matlab add-on Large Language Models (LLMs) with MATLAB is required (https://www.mathworks.com/matlabcentral/fileexchange/163796-large-language-models-llms-with-matlab).
-
-### LLMs evaluated
-- GPT-4o-mini  
-- GPT-3.5-Turbo  
-- Gemini-2.5-Flash  
-- Gemini-2.0-Flash  
-- DeepSeek-Chat
 
 ## Citation
 
