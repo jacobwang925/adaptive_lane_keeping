@@ -334,11 +334,7 @@ cd codes
 run('phi_generation/run_llm_phi_ablation.m')
 ```
 
-This script evaluates several LLMs by asking each model to generate multiple candidate $\phi$ expressions from the same prompt. Each expression is checked using:
-
-```
-phi_expr_passes_barrier_check.m
-```
+This script evaluates several LLMs by asking each model to generate multiple candidate $\phi$ expressions from the same prompt. Each expression is checked using `phi_expr_passes_barrier_check.m`.
 
 The results are saved to:
 
