@@ -199,7 +199,7 @@ data_mpc/data_APSC_multi_icy_H10.mat
 
 To reproduce the ablation experiments and trade-off visualizations:
 
-```
+```matlab
 cd codes
 run('param_sweep_parallel.m')
 ```
@@ -218,7 +218,7 @@ After the sweep completes:
 
 1. **Visualize all trajectories and summary statistics:**
 
-   ```
+   ```matlab
    run('data_mpc/plot_trajectories_all.m')
    ```
 
@@ -226,7 +226,7 @@ After the sweep completes:
 
 2. **Reproduce the safety–efficiency trade-off plot:**
 
-   ```
+   ```matlab
    run('data_mpc/tradeoff_plot.m')
    ```
 
@@ -238,7 +238,7 @@ After the sweep completes:
 
 To reproduce the experiment results reported in Table 1 and Table 2:
 
-```
+```matlab
 cd codes
 run('run_llm_ablation_control.m')
 ```
@@ -246,7 +246,7 @@ This script evaluates how different LLMs infer control-related safety parameters
   - **Run 1** uses the *aggressive* user input  
   - **Run 2** uses the *conservative* user input (and receives feedback from Run 1)
 
-```
+```matlab
 cd codes
 run('run_llm_ablation_estimator.m')
 ```
@@ -260,12 +260,12 @@ All result files are saved to:
   LLM/llm_results
   ```
 To visualize the results:
-```
+```matlab
 cd codes
 run('show_result_control.m')
 ```
 and
-```
+```matlab
 cd codes
 run('show_result_estimator.m')
 ```
@@ -288,7 +288,7 @@ This section reproduces the optional LLM-based barrier-function generation exper
 
 The related scripts are located in:
 
-```matlab
+```
 codes/phi_generation/
 ```
 
@@ -306,7 +306,7 @@ run('phi_generation/compare_phi_expressions.m')
 - Edit `compare_phi_expressions.m` to modify the candidate $\phi$ expressions, `PSC` settings, `EMAX`, and `MU_VALUE`.
 - Results are saved to:
 
-  ```matlab
+  ```
   data_mpc/phi_comparison_results.mat
   ```
 
@@ -336,13 +336,13 @@ run('phi_generation/run_llm_phi_ablation.m')
 
 This script evaluates several LLMs by asking each model to generate multiple candidate $\phi$ expressions from the same prompt. Each expression is checked using:
 
-```matlab
+```
 phi_expr_passes_barrier_check.m
 ```
 
 The results are saved to:
 
-```matlab
+```
 LLM/llm_results/phi_ablation.mat
 ```
 
@@ -369,7 +369,7 @@ The pipeline performs:
 
 Results are saved under:
 
-```matlab
+```
 codes/data_mpc/
 ```
 
