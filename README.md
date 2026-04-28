@@ -47,10 +47,12 @@ The performance of these controllers is compared in terms of **computation time*
 ```
 .
 ├─ README.md
+├─ .env.example            ← API key variable names; copy to `.env` in repo root (see §9)
 ├─ codes/
 │  ├─ mdl_closed_loop_mpc.slx     ← Main Simulink model
 │  ├─ main_single_run.m           ← Run one scenario (quick test)
 │  ├─ main_parallel_runs.m        ← Run multiple parallel simulations
+│  ├─ phi_generation/            ← Optional PSC barrier *phi* tooling (see §9)
 │  ├─ param_sweep_parallel.m      ← Run massive parallel ablation simulations
 │  ├─ impl_controller/            ← MPC, PSC, CDBF implementations
 │  ├─ impl_estimator/             ← Friction coefficient estimator
@@ -268,6 +270,7 @@ cd codes
 run('show_result_estimator.m')
 ```
 Please ensure you provide your own API keys in the code before execution.
+For optional barrier-function + LLM scripts (`phi_generation/`, §9), you can instead use a **`.env`** file in the repository root; see [`.env.example`](.env.example).
 Matlab add-on Large Language Models (LLMs) with MATLAB is required (https://www.mathworks.com/matlabcentral/fileexchange/163796-large-language-models-llms-with-matlab).
 
 ### LLMs evaluated
@@ -276,6 +279,57 @@ Matlab add-on Large Language Models (LLMs) with MATLAB is required (https://www.
 - Gemini-2.5-Flash  
 - Gemini-2.0-Flash  
 - DeepSeek-Chat
+
+## 9. Ablations: LLM barrier function generation
+
+Section 3 uses `main_single_run.m` as a **script** for the paper baseline. The `codes/phi_generation/` folder is **optional**: it provides `main_single_run_phi.m` for closed-loop runs with a **custom barrier** *phi*, plus scripts that compare analytical *phi* or use LLMs to propose *phi*. See [`.env.example`](.env.example) for API variable names used by the LLM entries below.
+
+### `main_single_run_phi.m`
+
+- Call from MATLAB as a function; arguments are `phi_expr`, `emax`, `safety_method`, `mu_value`, and optional `opts` (estimator priors, initial speed, etc.). See the file header for PSC, CDBF, DIRECT, and NONE.  
+- `compare_phi_expressions.m` drives a **batch of analytical** *phi* by calling `main_single_run_phi` for each row; no LLM required.
+
+```matlab
+cd codes
+run('phi_generation/compare_phi_expressions.m')   % writes data_mpc/phi_comparison_results.mat
+run('phi_generation/plot_phi_comparison.m')      % optional figure from that .mat
+```
+
+- Edit `compare_phi_expressions.m` to change the expression list, `PSC` settings, `EMAX`, and `MU_VALUE`.  
+- When the run finishes, `restore_fun_safety_from_main.m` resets `codes/fun_safety_condition.m` to the mainline snapshot in that folder.
+
+### API keys (`.env`) for LLM scripts
+
+The next two scripts call cloud APIs. Copy [`.env.example`](.env.example) to **`.env`** in the **repository root** (gitignored) and set:
+
+- `OPENAI_API_KEY` — OpenAI (GPT)  
+- `GEMINI_API_KEY` — Google Gemini  
+- `DEEPSEEK_API_KEY` — DeepSeek  
+
+### `run_llm_pipeline.m`
+
+Natural-language instructions → LLM infers priors and a *phi* string → validation → `main_single_run_phi` for several closed-loop stages with feedback between runs. Writes a `.mat` under `codes/data_mpc/`.
+
+```matlab
+cd codes
+run('phi_generation/run_llm_pipeline.m')
+```
+
+- Uses `llm_inferring_phi.m` and `llm_reasoning_phi.m` in `phi_generation/`.  
+- Ends with `restore_fun_safety_from_main.m` so `fun_safety_condition.m` matches mainline again.
+
+### `run_llm_phi_ablation.m`
+
+Several models each generate many candidate *phi* strings from one prompt; each expression is validated with `phi_expr_passes_barrier_check.m`. Saves validity rates and raw strings per model.
+
+```matlab
+cd codes
+run('phi_generation/run_llm_phi_ablation.m')
+```
+
+- Results: `LLM/llm_results/phi_ablation.mat` (`all_results`, `models`, `num_trials`).
+
+---
 
 ## Citation
 
