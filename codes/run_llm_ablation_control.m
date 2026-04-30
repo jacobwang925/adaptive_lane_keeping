@@ -1,9 +1,19 @@
 clear; clc; close all;
 
-% Please set you api keys here
-setenv('OPENAI_API_KEY','');
-setenv('X-goog-api-key','');
-setenv('deepseekApiKey','');
+%% Load API keys from .env (see .env.example in repo root)
+thisDir = fileparts(mfilename('fullpath'));   % .../codes
+repoRoot = fileparts(thisDir);                % repository root
+env_str = fileread(fullfile(repoRoot, '.env'));
+env_lines = splitlines(env_str);
+for i = 1:length(env_lines)
+    line = strtrim(env_lines{i});
+    if ~isempty(line) && ~startsWith(line, '#') && contains(line, '=')
+        idx = strfind(line, '=');
+        key = strtrim(line(1:idx(1)-1));
+        val = strtrim(line(idx(1)+1:end));
+        setenv(key, val);
+    end
+end
 
 % --- Helper functions ---
 function S_new = map_to_closest(S, lists)
