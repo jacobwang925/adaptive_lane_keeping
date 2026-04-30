@@ -2,20 +2,14 @@
 clear; clc;
 
 % --- Define Parameter Lists for Sweeping ---
-% prior_ic1_list = [0.3, 0.5, 0.9];
-% prior_ic2_list = [0.05, 0.3];
-% mes_var_list   = [0.05, 0.3];
-% emax_list      = [3, 5, 10];
-% mu_gt_list     = [0.3, 0.5, 0.8];
-
-v0 = 10; % initial velocity
-
-% smoke test
-prior_ic1_list = [0.5,  0.9];
+prior_ic1_list = [0.3, 0.5, 0.9];
 prior_ic2_list = [0.05, 0.3];
-mes_var_list   = [0.05];
-emax_list      = [3, 5];
-mu_gt_list     = [0.8];
+mes_var_list   = [0.05, 0.3];
+emax_list      = [3, 5, 10];
+mu_gt_list     = [0.3, 0.5, 0.8];
+
+v0 = 20; % initial velocity
+
 
 % --- Set Save Flag ---
 saveData = true;
@@ -39,7 +33,7 @@ for mu_val = mu_gt_list
                     
                     % Display progress to the command window
                     fprintf('Running sim #%d: prior_ic=[%.2f, %.2f], mes_var=%.2f, emax=%.1f, mu_gt=%.1f\n, v0=%.1f\n', ...
-                            run_index, prior_ic(1), prior_ic(2), mes_var, emax, mu_gt, v0); % <-- Updated fprintf
+                            run_index, prior_ic(1), prior_ic(2), mes_var, emax, mu_gt, v0);
                     
                     % Run the parallel simulation
                     run_closed_loop_parallel(prior_ic, mes_var, emax, mu_gt, v0, saveData); 

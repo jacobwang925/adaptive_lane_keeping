@@ -57,9 +57,10 @@ nlobj.Model.NumberOfParameters = 2;
 nlobj.Weights.OutputVariables = [0.05 1 1]; % [Vx,e,psi] 
 nlobj.Weights.ManipulatedVariablesRate = [1 1];
 % constraint
-%nlobj.Optimization.CustomIneqConFcn = "fun_inequality";   % PSC (proposed)
-%nlobj.Optimization.CustomIneqConFcn = "fun_inequality_CDBF";  % CDBF
-%nlobj.Optimization.CustomIneqConFcn = @myIneqConFunction; % defined below for testing
+% nlobj.Optimization.CustomIneqConFcn = []; % AMPC
+nlobj.Optimization.CustomIneqConFcn = "fun_inequality";   % PSC (proposed)
+% nlobj.Optimization.CustomIneqConFcn = "fun_inequality_CDBF";  % CDBF
+
 
 % validation for codegeneration
 u0 = [0 0];

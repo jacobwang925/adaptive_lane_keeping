@@ -47,7 +47,7 @@ The performance of these controllers is compared in terms of **computation time*
 ```
 .
 ├─ README.md
-├─ .env.example                    ← API keys; rename to `.env` in the repo root
+├─ .env.example                     ← API keys; rename to `.env` in the repo root
 ├─ codes/
 │  ├─ mdl_closed_loop_mpc.slx       ← Main Simulink model
 │  ├─ main_single_run.m             ← Run one scenario for a quick test
@@ -82,6 +82,7 @@ For more details on Simulink implementation, see [docs/model_overview.md](docs/m
 - Model Predictive Control Toolbox  
 - Optimization Toolbox  
 - Parallel Computing Toolbox (for `main_parallel_runs.m`)  
+- MATLAB add-on: Large Language Models (LLMs) with MATLAB  (https://www.mathworks.com/matlabcentral/fileexchange/163796-large-language-models-llms-with-matlab).
 
 ---
 
@@ -239,7 +240,10 @@ After the sweep completes:
 ![user_adaptation](docs/user_adaptation.png)
 
 For LLM experiments, rename `.env.example` to `.env` in the repository root and fill in your API keys. The `.env` file is gitignored.
-Matlab add-on Large Language Models (LLMs) with MATLAB is required (https://www.mathworks.com/matlabcentral/fileexchange/163796-large-language-models-llms-with-matlab).
+
+
+
+Note that the MATLAB add-on 'Large Language Models (LLMs) with MATLAB' is required (https://www.mathworks.com/matlabcentral/fileexchange/163796-large-language-models-llms-with-matlab).
 
 
 

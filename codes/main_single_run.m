@@ -61,11 +61,11 @@ nlobj.Model.NumberOfParameters = 2;
 nlobj.Weights.OutputVariables = [0.03 1 1]; % [Vx,e,psi] 
 nlobj.Weights.ManipulatedVariablesRate = [1 1];
 %%% constraint
-%nlobj.Optimization.CustomIneqConFcn = []; % AMPC
-% nlobj.Optimization.CustomIneqConFcn = "fun_inequality"; % PSC (Proposed)
-%nlobj.Optimization.CustomIneqConFcn = "fun_inequality_CDBF"; % CDBF
-nlobj.Optimization.CustomIneqConFcn = "fun_inequality_direct_lane_keep"; % Direct use of Lane keep condition
-%nlobj.Optimization.CustomIneqConFcn = @myIneqConFunction; % defined below
+% nlobj.Optimization.CustomIneqConFcn = []; % AMPC
+nlobj.Optimization.CustomIneqConFcn = "fun_inequality"; % PSC (Proposed)
+% nlobj.Optimization.CustomIneqConFcn = "fun_inequality_CDBF"; % CDBF
+% nlobj.Optimization.CustomIneqConFcn = "fun_inequality_direct_lane_keep"; % Direct use of Lane keep condition
+
 
 % validation for codegeneration
 u0 = [0 0];
@@ -117,16 +117,8 @@ LfP   = renamevars( res.LfP.extractTimetable, 'Data', 'LfP');
 LgP   = renamevars( res.LgP.extractTimetable, 'Data', 'LgP');
 BP    = renamevars( res.BP.extractTimetable,  'Data', 'BP');
 
-%save 'data/data_Nominal_mu09' prob dist state input force slipA slipR traj LfP LgP BP
+%save 'data/data_Nominal_mu03' prob dist state input force slipA slipR traj LfP LgP BP
 
 disp('--- completed ----')
 
-function cineq = myIneqConFunction(X,U,e,data,mu,probs)
-    u = U(1,:)';
-    epsilon = 0.1;  alpha   = 1.0; 
-    p = probs(1); LfP = probs(2); LgP = probs(3:4); BP = probs(5);
-    cineq = -LgP * u - LfP - BP - alpha * ( p - (1-epsilon) );
-    %disp([cineq, e])
-    %cineq = -1;
-end
 
