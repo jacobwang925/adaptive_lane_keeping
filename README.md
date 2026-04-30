@@ -47,43 +47,27 @@ The performance of these controllers is compared in terms of **computation time*
 ```
 .
 ├─ README.md
-├─ .env.example                   ← API key variable names; copy to `.env` in repo root (see §8, §9)
+├─ .env.example                    ← API keys; rename to `.env` in the repo root
 ├─ codes/
-│  ├─ mdl_closed_loop_mpc.slx     ← Main Simulink model
-│  ├─ main_single_run.m           ← Run one scenario (quick test)
-│  ├─ main_parallel_runs.m        ← Run multiple parallel simulations
-│  ├─ param_sweep_parallel.m      ← Run massive parallel ablation simulations
-│  ├─ run_llm_ablation_control.m  ← LLM ablation: control parameters (see §8)
-│  ├─ run_llm_ablation_estimator.m ← LLM ablation: estimator parameters (see §8)
-│  ├─ show_result_control.m       ← Visualize control-ablation results
-│  ├─ show_result_estimator.m     ← Visualize estimator-ablation results
-│  ├─ llm_inferring.m             ← LLM call: infer priors from a user instruction
-│  ├─ llm_reasoning.m             ← LLM call: refine priors using prior-run feedback
-│  ├─ phi_generation/             ← Optional LLM barrier *phi* tooling (see §9)
-│  │   ├─ run_llm_pipeline.m         ← End-to-end LLM + simulation pipeline
-│  │   ├─ run_llm_phi_ablation.m     ← LLM ablation: barrier-function generation
-│  │   ├─ compare_phi_expressions.m  ← Compare candidate phi expressions
-│  │   ├─ plot_phi_comparison.m      ← Plot phi comparison results
-│  │   ├─ main_single_run_phi.m      ← Single-run sim variant for phi experiments
-│  │   ├─ llm_inferring_phi.m        ← LLM call: infer priors + phi expression
-│  │   ├─ llm_reasoning_phi.m        ← LLM call: refine priors + phi from feedback
-│  │   ├─ llm_phi_barrier_rules_text.m ← Shared phi barrier rules prompt
-│  │   ├─ phi_expr_passes_barrier_check.m ← Validate generated phi expressions
-│  │   ├─ set_phi_expr.m             ← Inject a phi expression into safety condition
-│  │   ├─ fun_safety_condition_main.m / fun_safety_condition_phi.m ← Safety templates
-│  │   └─ restore_fun_safety_from_main.m ← Reset safety condition to main
-│  ├─ impl_controller/            ← MPC, PSC, CDBF implementations
-│  ├─ impl_estimator/             ← Friction coefficient estimator
-│  ├─ impl_model/                 ← Vehicle and dynamics models
-│  ├─ impl_road/                  ← Road description
-│  ├─ fun_*                       ← System dynamics, inequality constraints, etc.
-│  ├─ mfun_* / msfun_*            ← MATLAB Function blocks used in the Simulink model
-│  └─ data_mpc/                   ← Simulation results (saved .mat files) and plotting scripts
-│       └─ figs_mpc/              ← Ablation trajectory visualizations and statistics
-├─  docs/                         ← Simulink documentation and figures
-└─  LLM/
-   ├─ llm_results/                ← Ablation results
-   └─ user_inputs/                ← User commands
+│  ├─ mdl_closed_loop_mpc.slx       ← Main Simulink model
+│  ├─ main_single_run.m             ← Run one scenario for a quick test
+│  ├─ main_parallel_runs.m          ← Run multiple parallel simulations
+│  ├─ param_sweep_parallel.m        ← Run large-scale parallel ablation simulations
+│  ├─ run_llm_ablation_control.m    ← LLM ablation for control parameters
+│  ├─ run_llm_ablation_estimator.m  ← LLM ablation for estimator parameters
+│  ├─ phi_generation/               ← LLM-based barrier-function generation
+│  ├─ impl_controller/              ← MPC, PSC, and CDBF implementations
+│  ├─ impl_estimator/               ← Friction-coefficient estimator
+│  ├─ impl_model/                   ← Vehicle and dynamics models
+│  ├─ impl_road/                    ← Road description
+│  ├─ fun_*                         ← System dynamics, inequality constraints, and related utilities
+│  ├─ mfun_* / msfun_*              ← MATLAB Function and S-Function implementations used in Simulink
+│  └─ data_mpc/                     ← Saved simulation results and plotting scripts
+│       └─ figs_mpc/                ← Ablation trajectory visualizations and statistics
+├─ docs/                            ← Simulink documentation and figures
+└─ LLM/
+   ├─ llm_results/                  ← LLM ablation results
+   └─ user_inputs/                  ← User command examples
 
 ```
 
@@ -254,6 +238,11 @@ After the sweep completes:
 
 ![user_adaptation](docs/user_adaptation.png)
 
+For LLM experiments, rename `.env.example` to `.env` in the repository root and fill in your API keys. The `.env` file is gitignored.
+Matlab add-on Large Language Models (LLMs) with MATLAB is required (https://www.mathworks.com/matlabcentral/fileexchange/163796-large-language-models-llms-with-matlab).
+
+
+
 To reproduce the experiment results reported in Table 1 and Table 2:
 
 ```matlab
@@ -287,9 +276,6 @@ and
 cd codes
 run('show_result_estimator.m')
 ```
-Before execution, copy [`.env.example`](.env.example) to `.env` in the repository root and fill in your API keys (`OPENAI_API_KEY`, `GEMINI_API_KEY`, `DEEPSEEK_API_KEY`). The `.env` file is gitignored. The same `.env` is used by the optional barrier-function scripts under `phi_generation/` (§9).
-Matlab add-on Large Language Models (LLMs) with MATLAB is required (https://www.mathworks.com/matlabcentral/fileexchange/163796-large-language-models-llms-with-matlab).
-
 ### LLMs evaluated
 - GPT-4o-mini  
 - GPT-3.5-Turbo  
@@ -335,14 +321,6 @@ run('phi_generation/plot_phi_comparison.m')
 ```
 
 ### LLM-based barrier-function generation
-
-Before running the LLM scripts, rename `.env.example` to `.env`, and place it under the repository root. Then provide the required API keys:
-
-- `OPENAI_API_KEY` — OpenAI models
-- `GEMINI_API_KEY` — Google Gemini models
-- `DEEPSEEK_API_KEY` — DeepSeek models
-
-The `.env` file is gitignored and should not be committed.
 
 To reproduce the LLM barrier-function generation ablation:
 
