@@ -60,7 +60,7 @@ if contains(p.Results.ModelName, "gpt", "IgnoreCase", true)
 elseif contains(p.Results.ModelName, "gemini", "IgnoreCase", true)
     % --- Gemini branch ---
     fprintf("working with "+ p.Results.ModelName)
-    apiKey = getenv('X-goog-api-key');
+    apiKey = getenv('GEMINI_API_KEY');
     user_prompt = sprintf("\nUser instruction: %s", user_input);
     url = "https://generativelanguage.googleapis.com/v1beta/models/" + p.Results.ModelName + ":generateContent";
     fullUrl = url + "?key=" + apiKey;
@@ -91,7 +91,7 @@ elseif contains(p.Results.ModelName, "deepseek", "IgnoreCase", true)
     % --- Deepseek branch ---
     fprintf("working with "+ p.Results.ModelName + "\n")
     apiUrl = 'https://api.deepseek.com/v1/chat/completions';
-    apiKey = getenv('deepseekApiKey');
+    apiKey = getenv('DEEPSEEK_API_KEY');
 
     % Prepare the request headers
     headers = {'Authorization', ['Bearer ' apiKey]; ...
